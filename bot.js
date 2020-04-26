@@ -59,7 +59,7 @@ function hasCommand(message) {
 
 function getSignatureFromString(message) {
     let signatures = getSignatures();
-    let matches = signatures.filter((signature) => {
+    return signatures.filter((signature) => {
         return message.startsWith(signature);
     }).pop();
 }
