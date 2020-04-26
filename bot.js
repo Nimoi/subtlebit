@@ -13,44 +13,74 @@ const opts = {
 
 const client = new tmi.client(opts);
 
-client.on('message', onMessageHandler);
-client.on('connected', onConnectedHandler);
-
+client.on('message', onMessage);
+client.on('connected', onConnected);
 client.connect();
 
-function onMessageHandler (target, context, msg, self) {
-  if (self) { return; } // Ignore messages from the bot
-console.log(target, context, msg, self);
+function onMessage (target, context, msg, self) {
+    if (self) { return; } // Ignore messages from the bot
 
-  const commandName = msg.trim();
+    // logMessage({
+        // target, context, msg, self
+    // })
 
-  if (commandName === '!dice') {
-    const num = rollDice();
-    client.say(target, `/me You rolled a ${num}`);
-    console.log(`* Executed ${commandName} command`);
-	return;
-  }
-
-	if (commandName === ':D') {
-	    client.say(target, `/me :D ${emoji.get('coffee')}`);
-	    console.log(`* Executed ${commandName} command`);
-	}
-
-	if (commandName.startsWith('!moji')) {
-		let text = commandName.replace('!moji', '');
-		let translated = moji.translate(text);
-		console.log(translated);
-		    client.say(target, `/me ${translated}`);
-	}
-
-	console.log(`* ${context['display-name']} ${commandName}`);
+    const message = msg.trim();
+    if (! hasCommand(message)) {
+        console.log(`* ${context['display-name']} ${msg}`);
+        return;
+    }
+    handleCommand(message, target, context);
 }
 
-function rollDice () {
-  const sides = 6;
-  return Math.floor(Math.random() * sides) + 1;
-}
-
-function onConnectedHandler (addr, port) {
+function onConnected (addr, port) {
   console.log(`* Connected to ${addr}:${port}`);
+}
+
+const commands = [
+    {
+        signature: ':D',
+        execute(text, target, context) {
+            client.say(target, `/me :D ${emoji.get('coffee')}`);
+            console.log(`* Executed ${this.signature} command`);
+        }
+    },
+    {
+        signature: '!moji',
+        execute(text, target, context) {
+            let translated = moji.translate(text);
+            client.say(target, `/me ${translated}`);
+        }
+    }
+];
+
+function hasCommand(message) {
+    return getSignatureFromString(message) !== undefined;
+}
+
+function getSignatureFromString(message) {
+    let signatures = getSignatures();
+    let matches = signatures.filter((signature) => {
+        return message.startsWith(signature);
+    }).pop();
+}
+
+function getCommandBySignature(signature) {
+    return commands.filter((command) => {
+        return command.signature === signature;
+    }).pop();
+}
+
+function getSignatures() {
+    return commands.reduce((carry, command) => {
+        carry.push(command.signature);
+        return carry;
+    }, []);
+}
+
+function handleCommand(message, target, context) {
+    let signature = getSignatureFromString(message);
+    let command = getCommandBySignature(signature);
+    let text = message.replace(signature, '');
+
+    command.execute(text, target, context);
 }
