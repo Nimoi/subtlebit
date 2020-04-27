@@ -9,16 +9,8 @@ https://www.npmjs.com/package/node-emoji
 Capture screenshots of the stream??
 https://github.com/sindresorhus/pageres
 
-https://github.com/get-alex/alex
-
 https://github.com/Tjatse/node-readability/wiki/Handbook#usage
 Get Title and contents of links, print title and some details in chat
-
-https://github.com/maxogden/cool-ascii-faces
-
-https://github.com/melaniecebula/cat-ascii-faces
-
-https://github.com/sindresorhus/yes-no-words
 
 https://github.com/sindresorhus/supervillains
 
@@ -29,8 +21,6 @@ https://github.com/sindresorhus/superheroes
 https://github.com/sindresorhus/dog-names
 
 https://github.com/sindresorhus/cat-names
-
-https://github.com/sindresorhus/superb
 
 https://github.com/Marak/Faker.js
 

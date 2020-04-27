@@ -3,5 +3,8 @@
     "password": "",
     "channels": [
         ""
+    ],
+    "whitelist": [
+        ""
     ]
 }
