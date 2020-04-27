@@ -24,4 +24,3 @@ https://github.com/sindresorhus/cat-names
 
 https://github.com/Marak/Faker.js
 
-https://www.npmjs.com/package/text-manipulation
