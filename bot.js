@@ -7,7 +7,6 @@ const cats = require('cat-ascii-faces');
 const yesNoWords = require('yes-no-words');
 const superb = require('superb');
 const v = require('voca');
-//const hero = require();
 const readline = require('readline');
 const setupCommands = require('./commands.js');
 const superheroes = require('superheroes');
@@ -15,6 +14,7 @@ const supervillains = require('supervillains');
 const pokemon = require('pokemon');
 const dogNames = require('dog-names');
 const catNames = require('cat-names');
+const chalk = require('chalk');
 
 const opts = {
   identity: {
@@ -41,13 +41,13 @@ function onMessage (target, context, msg, self) {
 
     const message = msg.trim();
     if (! hasCommand(message)) {
-        log(`* ${context.username} ${msg}`);
+        log(chalk.white(`* ${context.username} ${msg}`));
         let warnings = alex(msg).messages;
         if (! warnings.length) {
             return;
         }
         warnings.forEach((warning) => {
-            log(warning.message);
+            log(chalk.dim(warning.message));
         });
         return;
     }
@@ -55,7 +55,7 @@ function onMessage (target, context, msg, self) {
 }
 
 function onConnected (addr, port) {
-  log(`* Connected to ${addr}:${port}`);
+  log(chalk.green(`* Connected to ${addr}:${port}`));
 }
 
 function hasCommand(message) {
@@ -88,12 +88,12 @@ function handleCommand(message, target, context) {
     let text = parseText(message.slice(signature.length));
 
     if (! canRunCommand(command, context)) {
-        log(`! ${context.username} does not have permission to run ${signature}.`);
+        log(chalk.yellow(`! ${context.username} does not have permission to run ${signature}.`));
         return;
     }
 
     command.execute(text, target, context);
-    log(`$ ${context.username} executed ${signature}.`);
+    log(chalk.magenta(`$ ${context.username} executed ${signature}.`));
 }
 
 function canRunCommand(command, context) {
@@ -142,7 +142,7 @@ rl.on('line', (line) => {
         false
     );
 }).on('close', () => {
-    log('Bye!');
+    log(chalk.bold('Bye!'));
 });
 
 function log(message) {
