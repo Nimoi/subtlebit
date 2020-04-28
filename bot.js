@@ -41,13 +41,13 @@ function onMessage (target, context, msg, self) {
 
     const message = msg.trim();
     if (! hasCommand(message)) {
-        log(chalk.white(`* ${context.username} ${msg}`));
+        log(chalk.rgb(200,200,200)(`* ${printUsername(context)} ${msg}`));
         let warnings = alex(msg).messages;
         if (! warnings.length) {
             return;
         }
         warnings.forEach((warning) => {
-            log(chalk.dim(warning.message));
+            log(chalk.rgb(100,100,100)(warning.message));
         });
         return;
     }
@@ -88,12 +88,16 @@ function handleCommand(message, target, context) {
     let text = parseText(message.slice(signature.length));
 
     if (! canRunCommand(command, context)) {
-        log(chalk.yellow(`! ${context.username} does not have permission to run ${signature}.`));
+        log(chalk.yellow(`! ${printUsername(context)} does not have permission to run ${signature}.`));
         return;
     }
 
     command.execute(text, target, context);
-    log(chalk.magenta(`$ ${context.username} executed ${signature}.`));
+    log(chalk.magenta(`$ ${printUsername(context)} executed ${signature}.`));
+}
+
+function printUsername(context) {
+    return chalk.hex(context.color)(context['display-name']);
 }
 
 function canRunCommand(command, context) {
@@ -137,7 +141,11 @@ rl.on('line', (line) => {
     }
     onMessage(
         config.cli.channel,
-        { username: config.username },
+        {
+            'display-name': config.username,
+            username: config.username,
+            color: '#0084ff'
+        },
         line,
         false
     );
