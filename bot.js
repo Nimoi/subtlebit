@@ -53,41 +53,6 @@ function onConnected (addr, port) {
 
 const commands = [
     {
-        signature: ':D',
-        exclusive: false,
-        execute(text, target, context) {
-            client.say(target, `${cool()}`);
-        }
-    },
-    {
-        signature: ':3',
-        exclusive: false,
-        execute(text, target, context) {
-            client.say(target, `${cats()}`);
-        }
-    },
-    {
-        signature: 'YES',
-        exclusive: true,
-        execute(text, target, context) {
-            client.say(target, `${yesNoWords.yesRandom()}`);
-        }
-    },
-    {
-        signature: 'NO',
-        exclusive: true,
-        execute(text, target, context) {
-            client.say(target, `${yesNoWords.noRandom()}`);
-        }
-    },
-    {
-        signature: 'AWESOME',
-        exclusive: true,
-        execute(text, target, context) {
-            client.say(target, `${v.capitalize(superb.random())}`);
-        }
-    },
-    {
         signature: '!MOJI',
         exclusive: false,
         execute(text, target, context) {
@@ -122,7 +87,14 @@ const commands = [
         execute(text, target, context) {
             client.say(target,  text);
         }
-    }
+    },
+    {
+        signature: '!SARCASM',
+        exclusive: true,
+        execute(text, target, context) {
+            client.say(target,  `${studly(text)}`);
+        }
+    },
     // const { b1ff, censor, chef, cockney, eleet, fudd, jethro, pirate, jibberish, ken, kenny, klaus, ky00te, LOLCAT, nethackify, newspeak, nyc, rasterman, scottish, scramble, spammer, studly, upsidedown } = require('talk-like-a');
 ];
 
@@ -153,15 +125,15 @@ function getSignatures() {
 function handleCommand(message, target, context) {
     let signature = getSignatureFromString(message);
     let command = getCommandBySignature(signature);
-    let text = message.slice(signature.length);
+    let text = parseText(message.slice(signature.length));
 
     if (! canRunCommand(command, context)) {
-        log(`* ${context.username} does not have permission to run ${signature}.`);
+        log(`! ${context.username} does not have permission to run ${signature}.`);
         return
     }
 
     command.execute(text, target, context);
-    log(`* ${context.username} executed ${signature}.`);
+    log(`$ ${context.username} executed ${signature}.`);
 }
 
 function canRunCommand(command, context) {
@@ -170,6 +142,15 @@ function canRunCommand(command, context) {
 
 function isUserWhitelisted(user) {
     return config.whitelist.indexOf(user) > -1;
+}
+
+function parseText(text) {
+    return text
+        .replace(/\B(:D)\b/g, cool())
+        .replace(/\B(:3)\b/g, cats())
+        .replace(/\b(awesome)\b/g, superb.random())
+        .replace(/\b(yes)\b/g, yesNoWords.yesRandom())
+        .replace(/\b(no)\b/g, yesNoWords.noRandom());
 }
 
 var rl = readline.createInterface({
@@ -181,11 +162,14 @@ var rl = readline.createInterface({
 rl.prompt();
 
 rl.on('line', (line) => {
+    if (line.length === 0) {
+        rl.prompt(true);
+        return;
+    }
     let signature = getSignatureFromString(line);
     if (signature === undefined) {
         line = '!say '+line;
     }
-    console.log(signature);
     onMessage(
         config.cli.channel,
         { username: config.username },
