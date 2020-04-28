@@ -15,6 +15,8 @@ const pokemon = require('pokemon');
 const dogNames = require('dog-names');
 const catNames = require('cat-names');
 const chalk = require('chalk');
+const terminalImage = require('terminal-image');
+const got = require('got');
 
 const opts = {
   identity: {
@@ -39,6 +41,14 @@ function onMessage (target, context, msg, self) {
         // target, context, msg, self
     // })
 
+    if (context.emotes !== null) {
+        for (let emote in context.emotes) {
+            (async () => {
+                const body = await got(`https://static-cdn.jtvnw.net/emoticons/v1/${emote}/1.0`).buffer();
+                console.log(await terminalImage.buffer(body));
+            })();
+        }
+    }
     const message = msg.trim();
     if (! hasCommand(message)) {
         log(chalk.rgb(200,200,200)(`* ${printUsername(context)} ${msg}`));
