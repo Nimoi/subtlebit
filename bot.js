@@ -1,6 +1,5 @@
 const config = require('./config.json');
 const tmi = require('tmi.js');
-const moji = require('moji-translate');
 const emoji = require('node-emoji');
 const alex = require('alex');
 const cool = require('cool-ascii-faces');
@@ -8,8 +7,14 @@ const cats = require('cat-ascii-faces');
 const yesNoWords = require('yes-no-words');
 const superb = require('superb');
 const v = require('voca');
-const { b1ff, censor, chef, cockney, eleet, fudd, jethro, pirate, jibberish, ken, kenny, klaus, ky00te, LOLCAT, nethackify, newspeak, nyc, rasterman, scottish, scramble, spammer, studly, upsidedown } = require('talk-like-a');
+//const hero = require();
 const readline = require('readline');
+const setupCommands = require('./commands.js');
+const superheroes = require('superheroes');
+const supervillains = require('supervillains');
+const pokemon = require('pokemon');
+const dogNames = require('dog-names');
+const catNames = require('cat-names');
 
 const opts = {
   identity: {
@@ -24,6 +29,8 @@ const client = new tmi.client(opts);
 client.on('message', onMessage);
 client.on('connected', onConnected);
 client.connect();
+
+const commands = setupCommands(client);
 
 function onMessage (target, context, msg, self) {
     if (self) { return; } // Ignore messages from the bot
@@ -50,53 +57,6 @@ function onMessage (target, context, msg, self) {
 function onConnected (addr, port) {
   log(`* Connected to ${addr}:${port}`);
 }
-
-const commands = [
-    {
-        signature: '!MOJI',
-        exclusive: false,
-        execute(text, target, context) {
-            let translated = moji.translate(text);
-            client.say(target, `${translated}`);
-        }
-    },
-    {
-        signature: '!PIRATE',
-        exclusive: false,
-        execute(text, target, context) {
-            client.say(target, `${pirate(text)}`);
-        }
-    },
-    {
-        signature: '!SCOTTISH',
-        exclusive: false,
-        execute(text, target, context) {
-            client.say(target, `${scottish(text)}`);
-        }
-    },
-    {
-        signature: '!:3',
-        exclusive: false,
-        execute(text, target, context) {
-            client.say(target,  `${ky00te(text)}`);
-        }
-    },
-    {
-        signature: '!SAY',
-        exclusive: true,
-        execute(text, target, context) {
-            client.say(target,  text);
-        }
-    },
-    {
-        signature: '!SARCASM',
-        exclusive: true,
-        execute(text, target, context) {
-            client.say(target,  `${studly(text)}`);
-        }
-    },
-    // const { b1ff, censor, chef, cockney, eleet, fudd, jethro, pirate, jibberish, ken, kenny, klaus, ky00te, LOLCAT, nethackify, newspeak, nyc, rasterman, scottish, scramble, spammer, studly, upsidedown } = require('talk-like-a');
-];
 
 function hasCommand(message) {
     return getSignatureFromString(message) !== undefined;
@@ -129,7 +89,7 @@ function handleCommand(message, target, context) {
 
     if (! canRunCommand(command, context)) {
         log(`! ${context.username} does not have permission to run ${signature}.`);
-        return
+        return;
     }
 
     command.execute(text, target, context);
@@ -150,7 +110,12 @@ function parseText(text) {
         .replace(/\B(:3)\b/g, cats())
         .replace(/\b(awesome)\b/g, superb.random())
         .replace(/\b(yes)\b/g, yesNoWords.yesRandom())
-        .replace(/\b(no)\b/g, yesNoWords.noRandom());
+        .replace(/\b(no)\b/g, yesNoWords.noRandom())
+        .replace(/\B(:hero)\b/g, superheroes.random())
+        .replace(/\B(:villain)\b/g, supervillains.random())
+        .replace(/\B(:pokemon)\b/g, pokemon.random())
+        .replace(/\B(:dog)\b/g, dogNames.allRandom())
+        .replace(/\B(:cat)\b/g, catNames.random());
 }
 
 var rl = readline.createInterface({
