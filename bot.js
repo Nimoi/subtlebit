@@ -17,6 +17,8 @@ const catNames = require('cat-names');
 const chalk = require('chalk');
 const terminalImage = require('terminal-image');
 const got = require('got');
+const moment = require('moment');
+const messages = require('./messages.js');
 
 const opts = {
   identity: {
@@ -37,35 +39,67 @@ const commands = setupCommands(client);
 function onMessage (target, context, msg, self) {
     if (self) { return; } // Ignore messages from the bot
 
-    // logMessage({
-        // target, context, msg, self
-    // })
+    const message = msg.trim();
+    let logData = {
+        target: target,
+        context: context,
+        message: message,
+        self: self,
+        signature: null,
+        text: null,
+        timestamp: moment().format("YYYY-MM-DD HH:mm:ss")
+    }
 
-    if (context.emotes !== null) {
-        for (let emote in context.emotes) {
+    printEmotes(context.emotes);
+
+    if (! hasCommand(message)) {
+        messages.log(logData);
+        handleChatMessage(context, message);
+        return;
+    }
+
+    let signature = getSignatureFromString(message);
+    let command = getCommandBySignature(signature);
+    let text = parseText(message.slice(signature.length));
+
+    logData.signature = signature;
+    logData.text = text;
+
+    messages.log(logData);
+
+    if (! canRunCommand(command, context)) {
+        printMessage(chalk.yellow(`! ${printUsername(context)} does not have permission to run ${signature}.`));
+        return;
+    }
+
+    command.execute(text, target, context);
+    printMessage(chalk.magenta(`$ ${printUsername(context)} executed ${signature}.`));
+}
+
+function printEmotes(emotes) {
+    if (emotes !== null) {
+        for (let emote in emotes) {
             (async () => {
                 const body = await got(`https://static-cdn.jtvnw.net/emoticons/v1/${emote}/1.0`).buffer();
-                console.log(await terminalImage.buffer(body));
+                printMessage(await terminalImage.buffer(body));
             })();
         }
     }
-    const message = msg.trim();
-    if (! hasCommand(message)) {
-        log(chalk.rgb(200,200,200)(`* ${printUsername(context)} ${msg}`));
-        let warnings = alex(msg).messages;
-        if (! warnings.length) {
-            return;
-        }
-        warnings.forEach((warning) => {
-            log(chalk.rgb(100,100,100)(warning.message));
-        });
+}
+
+function handleChatMessage(context, message) {
+    printMessage(chalk.rgb(200,200,200)(`* ${printUsername(context)} ${message}`));
+    let warnings = alex(message).messages;
+    if (! warnings.length) {
         return;
     }
-    handleCommand(message, target, context);
+    warnings.forEach((warning) => {
+        printMessage(chalk.rgb(100,100,100)(warning.message));
+    });
 }
 
 function onConnected (addr, port) {
-  log(chalk.green(`* Connected to ${addr}:${port}`));
+  printMessage(chalk.green(`* Connected to ${addr}:${port}`));
 }
 
 function hasCommand(message) {
@@ -90,20 +124,6 @@ function getSignatures() {
         carry.push(command.signature);
         return carry;
     }, []);
-}
-
-function handleCommand(message, target, context) {
-    let signature = getSignatureFromString(message);
-    let command = getCommandBySignature(signature);
-    let text = parseText(message.slice(signature.length));
-
-    if (! canRunCommand(command, context)) {
-        log(chalk.yellow(`! ${printUsername(context)} does not have permission to run ${signature}.`));
-        return;
-    }
-
-    command.execute(text, target, context);
-    log(chalk.magenta(`$ ${printUsername(context)} executed ${signature}.`));
 }
 
 function printUsername(context) {
@@ -160,10 +180,10 @@ rl.on('line', (line) => {
         false
     );
 }).on('close', () => {
-    log(chalk.bold('Bye!'));
+    printMessage(chalk.bold('Bye!'));
 });
 
-function log(message) {
+function printMessage(message) {
     readline.cursorTo(process.stdout, 0);
     readline.clearLine(process.stdout, 0);
     console.log(message);

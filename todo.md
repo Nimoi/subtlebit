@@ -1,5 +1,5 @@
-* Implement SQLite
-* Log all messages (timestamp, user who sent)
+
+* Fetch emote images through server, cache them, and shrink them.
 * logs stats for each user
 * achievements
 
@@ -14,3 +14,5 @@ Get Title and contents of links, print title and some details in chat
 
 https://github.com/Marak/Faker.js
 
+Resources
+https://github.com/tmijs/docs/blob/gh-pages/_posts/v1.4.2/2019-03-03-Commands.md
