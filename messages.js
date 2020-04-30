@@ -72,6 +72,50 @@ function createTables() {
 
 exports.randomQuote = (client, target) => {
     db.get(`SELECT * FROM messages WHERE username != 'nimoii' AND message_type = 'chat' AND signature IS NULL ORDER BY random() limit 1`, (err, row) => {
-        client.say(target,  `"${row.message}" - ${row.username}`);
+        client.say(target, `"${row.message}" - ${row.username}`);
+    });
+}
+
+exports.test = (client, target) => {
+    db.all(`SELECT message, username, signature from messages where (signature = '!SAY' OR signature IS NULL) order by timestamp desc limit 1`, (err, row) => {
+        console.log(row);
+        //client.say(target, `"${row.message}" - ${row.username}`);
+    });
+}
+
+const topThreeBaseQuery = `SELECT username, count(username) as chats FROM messages WHERE message_type = 'chat' AND (signature = '!SAY' OR signature IS NULL)`;
+const topThreeEndQuery = `GROUP BY username ORDER BY chats desc limit 3`;
+
+function getTopThree(callback) {
+    db.all(`${topThreeBaseQuery} ${topThreeEndQuery}`, callback);
+}
+
+exports.topThree = (client, target) => {
+    getTopThree((err, rows) => {
+        let message = `Top three Chatters: `;
+        rows.forEach((row, index) => {
+            message += `${row.username} (${row.chats})`
+            if (index < rows.length - 1) {
+                message += ', ';
+            }
+        });
+        client.say(target, message);
+    })
+}
+
+function getTopThreeMatching(search, callback) {
+    db.all(`${topThreeBaseQuery} AND message like ? ${topThreeEndQuery}`, [`%${search}%`], callback);
+}
+
+exports.topThreeMatch = (client, target, search) => {
+    getTopThreeMatching(search, (err, rows) => {
+        let message = `Top three ${search} : `;
+        rows.forEach((row, index) => {
+            message += `${row.username} (${row.chats})`
+            if (index < rows.length - 1) {
+                message += ', ';
+            }
+        });
+        client.say(target, message);
     });
 }

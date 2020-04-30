@@ -19,6 +19,7 @@ const terminalImage = require('terminal-image');
 const got = require('got');
 const moment = require('moment');
 const messages = require('./messages.js');
+const animals = require('./animals.js');
 
 const opts = {
   identity: {
@@ -149,7 +150,8 @@ function parseText(text) {
         .replace(/\B(:villain)\b/g, supervillains.random())
         .replace(/\B(:pokemon)\b/g, pokemon.random())
         .replace(/\B(:dog)\b/g, dogNames.allRandom())
-        .replace(/\B(:cat)\b/g, catNames.random());
+        .replace(/\B(:cat)\b/g, catNames.random())
+        .replace(/\B(:animal)\b/g, animals.random());
 }
 
 var rl = readline.createInterface({
@@ -174,6 +176,7 @@ rl.on('line', (line) => {
         {
             'display-name': config.username,
             username: config.username,
+            message_type: 'chat',
             color: '#0084ff'
         },
         line,
