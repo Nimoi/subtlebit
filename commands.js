@@ -1,6 +1,7 @@
 const { b1ff, censor, chef, cockney, eleet, fudd, jethro, pirate, jibberish, ken, kenny, klaus, ky00te, LOLCAT, nethackify, newspeak, nyc, rasterman, scottish, scramble, spammer, studly, upsidedown } = require('talk-like-a');
 const moji = require('moji-translate');
 const messages = require('./messages.js');
+const timer = require('./timer.js');
 const teller = require('fortune-teller');
 
 module.exports = function (client) {
@@ -102,6 +103,23 @@ module.exports = function (client) {
             exclusive: true,
             execute(text, target, context) {
                 messages.topThreeMatch(client, target, text);
+            }
+        },
+        {
+            signature: '!TIMER',
+            exclusive: true,
+            execute(text, target, context) {
+                let title = text.length
+                    ? text
+                    : '';
+                timer.start(title);
+            }
+        },
+        {
+            signature: '!STOP',
+            exclusive: true,
+            execute(text, target, context) {
+                client.say(target, timer.stop());
             }
         },
         {
