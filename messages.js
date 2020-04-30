@@ -1,5 +1,5 @@
-var sqlite3 = require('sqlite3').verbose();
-var db = new sqlite3.Database('chatlog.sqlite3', createTables);
+var db = require('./db.js');
+var queries = require('./queries.js');
 
 // TODO don't repeat these.. store the values and map them for different situations
 exports.log = (data) => {
@@ -51,25 +51,6 @@ exports.log = (data) => {
     });
 };
 
-function createTables() {
-    db.run(`CREATE TABLE IF NOT EXISTS messages (
-        id TEXT,
-        username TEXT,
-        color TEXT,
-        emotes TEXT,
-        message_type TEXT,
-        mod INTEGER,
-        subscriber INTEGER,
-        user_id INTEGER,
-        timestamp TEXT,
-        channel TEXT,
-        message TEXT,
-        self INTEGER,
-        signature TEXT,
-        text TEXT
-    )`);
-}
-
 exports.randomQuote = (client, target) => {
     db.get(`SELECT * FROM messages WHERE username != 'nimoii' AND message_type = 'chat' AND signature IS NULL ORDER BY random() limit 1`, (err, row) => {
         client.say(target, `"${row.message}" - ${row.username}`);
@@ -83,15 +64,9 @@ exports.test = (client, target) => {
     });
 }
 
-const topThreeBaseQuery = `SELECT username, count(username) as chats FROM messages WHERE message_type = 'chat' AND (signature = '!SAY' OR signature IS NULL)`;
-const topThreeEndQuery = `GROUP BY username ORDER BY chats desc limit 3`;
-
-function getTopThree(callback) {
-    db.all(`${topThreeBaseQuery} ${topThreeEndQuery}`, callback);
-}
 
 exports.topThree = (client, target) => {
-    getTopThree((err, rows) => {
+    queries.getTopThree((err, rows) => {
         let message = `Top three Chatters: `;
         rows.forEach((row, index) => {
             message += `${row.username} (${row.chats})`
@@ -103,12 +78,9 @@ exports.topThree = (client, target) => {
     })
 }
 
-function getTopThreeMatching(search, callback) {
-    db.all(`${topThreeBaseQuery} AND message like ? ${topThreeEndQuery}`, [`%${search}%`], callback);
-}
 
 exports.topThreeMatch = (client, target, search) => {
-    getTopThreeMatching(search, (err, rows) => {
+    queries.getTopThreeMatching(search, (err, rows) => {
         let message = `Top three ${search} : `;
         rows.forEach((row, index) => {
             message += `${row.username} (${row.chats})`
