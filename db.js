@@ -19,4 +19,13 @@ function createTables() {
         signature TEXT,
         text TEXT
     )`);
+    db.run(`CREATE TABLE IF NOT EXISTS achievements (
+        title TEXT UNIQUE,
+        criteria TEXT
+    )`);
+    db.run(`CREATE TABLE IF NOT EXISTS user_achievements (
+        achievement TEXT,
+        username TEXT,
+        timestamp TEXT
+    )`);
 }

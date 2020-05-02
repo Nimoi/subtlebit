@@ -2,6 +2,7 @@ const { b1ff, censor, chef, cockney, eleet, fudd, jethro, pirate, jibberish, ken
 const moji = require('moji-translate');
 const messages = require('./messages.js');
 const timer = require('./timer.js');
+const achievements = require('./achievements.js');
 const teller = require('fortune-teller');
 
 module.exports = function (client) {
@@ -71,6 +72,13 @@ module.exports = function (client) {
             }
         },
         {
+            signature: '!SPAM',
+            exclusive: true,
+            execute(text, target, context) {
+                client.say(target,  `${spammer(text)}`);
+            }
+        },
+        {
             signature: '!SARCASTICPIRATE',
             exclusive: true,
             execute(text, target, context) {
@@ -120,6 +128,31 @@ module.exports = function (client) {
             exclusive: true,
             execute(text, target, context) {
                 client.say(target, timer.stop());
+            }
+        },
+        {
+            signature: '!ADDACHIEVEMENT',
+            exclusive: true,
+            execute(text, target, context) {
+                achievements.add(text);
+            }
+        },
+        {
+            signature: '!PYRAMID',
+            exclusive: true,
+            execute(text, target, context) {
+                client.say(target, text);
+                client.say(target, text+' '+text);
+                client.say(target, text+' '+text+' '+text);
+                client.say(target, text+' '+text);
+                client.say(target, text);
+            }
+        },
+        {
+            signature: '!XSAID',
+            exclusive: true,
+            execute(text, target, context) {
+                messages.timesSaid(client, target, text);
             }
         },
         {

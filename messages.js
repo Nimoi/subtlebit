@@ -1,5 +1,6 @@
 var db = require('./db.js');
 var queries = require('./queries.js');
+var fs = require('fs');
 
 // TODO don't repeat these.. store the values and map them for different situations
 exports.log = (data) => {
@@ -49,11 +50,15 @@ exports.log = (data) => {
         $signature: data.signature,
         $text: data.text,
     });
+
+    fs.appendFile('messages.log', data.message+'\n', function (err) {
+        if (err) throw err;
+    });
 };
 
 exports.randomQuote = (client, target) => {
     db.get(`SELECT * FROM messages WHERE username != 'nimoii' AND message_type = 'chat' AND signature IS NULL ORDER BY random() limit 1`, (err, row) => {
-        client.say(target, `"${row.message}" - ${row.username}`);
+        client.say(target, `" ${row.message} " - ${row.username}`);
     });
 }
 
@@ -89,5 +94,13 @@ exports.topThreeMatch = (client, target, search) => {
             }
         });
         client.say(target, message);
+    });
+}
+
+exports.timesSaid = (client, target, text) => {
+    let username = text.split('|')[0];
+    let string = text.split('|')[1];
+    queries.getTopMatchingForUser(username, string, (err, row) => {
+        console.log(err, row);
     });
 }

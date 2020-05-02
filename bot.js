@@ -20,6 +20,7 @@ const got = require('got');
 const moment = require('moment');
 const messages = require('./messages.js');
 const animals = require('./animals.js');
+const markov = require('./markov.js');
 
 const opts = {
   identity: {
@@ -36,6 +37,8 @@ client.on('connected', onConnected);
 client.connect();
 
 const commands = setupCommands(client);
+
+markov.startBlabbin(client);
 
 function onMessage (target, context, msg, self) {
     if (self) { return; } // Ignore messages from the bot
