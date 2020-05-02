@@ -2,7 +2,6 @@ const { b1ff, censor, chef, cockney, eleet, fudd, jethro, pirate, jibberish, ken
 const moji = require('moji-translate');
 const messages = require('./messages.js');
 const timer = require('./timer.js');
-const achievements = require('./achievements.js');
 const teller = require('fortune-teller');
 
 module.exports = function (client) {
