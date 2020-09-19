@@ -2,6 +2,7 @@ const { b1ff, censor, chef, cockney, eleet, fudd, jethro, pirate, jibberish, ken
 const moji = require('moji-translate');
 const messages = require('./messages.js');
 const timer = require('./timer.js');
+const markov = require('./markov.js');
 const teller = require('fortune-teller');
 
 module.exports = function (client) {
@@ -148,10 +149,25 @@ module.exports = function (client) {
             }
         },
         {
+            signature: '!SLAP',
+            exclusive: true,
+            execute(text, target, context) {
+                text = `👋👋👋${text}👋👋👋`;
+                client.say(target, text);
+            }
+        },
+        {
             signature: '!XSAID',
             exclusive: true,
             execute(text, target, context) {
                 messages.timesSaid(client, target, text);
+            }
+        },
+        {
+            signature: '!BLAH',
+            exclusive: true,
+            execute(text, target, context) {
+                markov.saySomething(client, target, text);
             }
         },
         {

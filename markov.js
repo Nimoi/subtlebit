@@ -1,24 +1,29 @@
 var db = require('./db.js');
-var config = require('./config.js');
+var config = require('./config.json');
 var queries = require('./queries.js');
 const random = require('./random.js');
 const got = require('got');
 
 var MarkovChain = require('markovchain'),
     fs = require('fs'),
-    quotes;
+    quotes = new MarkovChain(fs.readFileSync('./messages.log', 'utf8'));
 
 exports.startBlabbin = (client) => {
-    var quotes = new MarkovChain(fs.readFileSync('./messages.log', 'utf8'))
-    blab(client, quotes);
+    blab(client);
 }
 
-function blab(client, quotes) {
+function blab(client) {
+    saySomething(client, config.channels[0]);
     setTimeout(function() {
-        let text = quotes.start(useUpperCase).end(random(3,20)).process();
-        client.say(config.channels[0], text);
-        blab(client, quotes);
+        blab(client);
     }, 30000 * random(10, 30));
+}
+
+var saySomething = exports.saySomething = (client, target, string = false) => {
+    let end = string ? string.trim() : random(3,20);
+    console.log(end);
+    let text = quotes.start(useUpperCase).end(end)
+    client.say(target, text.process());
 }
 
 var useUpperCase = function(wordList) {

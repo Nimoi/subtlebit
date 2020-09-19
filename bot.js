@@ -38,10 +38,14 @@ client.connect();
 
 const commands = setupCommands(client);
 
-markov.startBlabbin(client);
+//markov.startBlabbin(client);
 
 function onMessage (target, context, msg, self) {
-    if (self) { return; } // Ignore messages from the bot
+    if (self) {
+        // Ignore messages from the bot
+        printMessage(chalk.green(`$ ${printUsername(context)} message: ${msg}`));
+        return;
+    }
 
     const message = msg.trim();
     let logData = {
