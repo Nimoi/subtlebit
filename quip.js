@@ -34,7 +34,7 @@ const getRandomPrompt = () => {
 
 // Add quip line
 exports.addQuip = (client, target, text) => {
-    config.prompts.push(text);
+    config.prompts.push(text.trim());
     client.say(target, `/me Your quip has been added!`);
     saveConfig();
 };
@@ -66,7 +66,7 @@ exports.onQuip = (client, target, text, context) => {
         return false;
     }
 
-    addEntry(context['display-name'], text);
+    addEntry(context['display-name'], text.trim());
 
     if (hasMaxEntries()) {
         announceEntries(client, target);
@@ -89,7 +89,7 @@ const announceEntries = (client, target) => {
     for (let name in entries) {
         index++;
         let divider = index < Object.keys(entries) ? '// ' : '';
-        message += `[${index}]:${entries[name]} ${divider}`;
+        message += `[${index}]: ${entries[name]} ${divider}`;
     }
 
     setTimeout(() => {
