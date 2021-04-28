@@ -4,6 +4,7 @@ const messages = require('./messages.js');
 const timer = require('./timer.js');
 const markov = require('./markov.js');
 const teller = require('fortune-teller');
+const quip = require('./quip.js');
 
 module.exports = function (client) {
     return [
@@ -124,6 +125,23 @@ module.exports = function (client) {
             }
         },
         {
+            signature: '!DELAY',
+            exclusive: true,
+            execute(text, target, context) {
+                let parts = text.split(' ').filter(function(e) {
+                    return String(e).trim();
+                });
+                let time = parts.shift();
+                let message = parts.join(' ');
+                if (isNaN(time)) {
+                    time = 1;
+                }
+                setTimeout(() => {
+                    client.say(target, message);
+                }, time * 1000);
+            }
+        },
+        {
             signature: '!STOP',
             exclusive: true,
             execute(text, target, context) {
@@ -175,6 +193,34 @@ module.exports = function (client) {
             exclusive: true,
             execute(text, target, context) {
                 messages.test(client, target);
+            }
+        },
+        {
+            signature: '!STARTQUIP',
+            exclusive: true,
+            execute(text, target, context) {
+                quip.initQuip(client, target, text);
+            }
+        },
+        {
+            signature: '!QUIP',
+            exclusive: false,
+            execute(text, target, context) {
+                quip.onQuip(client, target, text, context);
+            }
+        },
+        {
+            signature: '!VOTE',
+            exclusive: false,
+            execute(text, target, context) {
+                quip.onVote(client, target, text, context);
+            }
+        },
+        {
+            signature: '!ADDQUIP',
+            exclusive: false,
+            execute(text, target, context) {
+                quip.addQuip(client, target, text);
             }
         },
         // const { b1ff, censor, chef, cockney, eleet, fudd, jethro, pirate, jibberish, ken, kenny, klaus, ky00te, LOLCAT, nethackify, newspeak, nyc, rasterman, scottish, scramble, spammer, studly, upsidedown } = require('talk-like-a');

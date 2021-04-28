@@ -150,9 +150,9 @@ function parseText(text) {
     return text
         .replace(/\B(:D)\b/g, cool())
         .replace(/\B(:3)\b/g, cats())
-        .replace(/\b(awesome)\b/g, superb.random())
-        .replace(/\b(yes)\b/g, yesNoWords.yesRandom())
-        .replace(/\b(no)\b/g, yesNoWords.noRandom())
+        .replace(/\b(:awesome)\b/g, superb.random())
+        .replace(/\b(:yes)\b/g, yesNoWords.yesRandom())
+        .replace(/\b(:no)\b/g, yesNoWords.noRandom())
         .replace(/\B(:hero)\b/g, superheroes.random())
         .replace(/\B(:villain)\b/g, supervillains.random())
         .replace(/\B(:pokemon)\b/g, pokemon.random())
