@@ -52,6 +52,23 @@ exports.initQuip = (client, target, text) => {
         maxEntries = parseInt(text);
     }
     client.say(target, `/me ${prompt} - enter !quip to answer now!`);
+
+    setTimeout(() => {
+        if (! isQuipping) {
+            return;
+        }
+        isQuipping = false;
+
+        // Not enough players entered, cancel it
+        if (Object.keys(entries).length < 2) {
+            resetGame();
+            client.say(target, `/me Not enough players entered the quip.`);
+            return;
+        }
+
+        // Go with what we have
+        announceEntries(client, target);
+    }, 60 * 1000);
 };
 
 const resetGame = () => {
@@ -62,14 +79,18 @@ const resetGame = () => {
 
 // Handle !quip entries
 exports.onQuip = (client, target, text, context) => {
-    if (! isQuipping || hasMaxEntries() || ! text) {
+    if (! isQuipping || hasMaxEntries()) {
         return false;
+    }
+    if (! text) {
+        client.say(target, '/me Please enter an answer: !gunt <answer>');
     }
 
     addEntry(context['display-name'], text.trim());
 
     if (hasMaxEntries()) {
         announceEntries(client, target);
+        isQuipping = false;
     }
 };
 
@@ -83,7 +104,7 @@ const hasMaxEntries = () => {
 
 // Show nominates
 const announceEntries = (client, target) => {
-    client.say(target, `/me "!vote #" for your favorite answer: `);
+    client.say(target, `/me "!vote #" for your favorite answer: ${prompt}`);
     let index = 0;
     let message = `/me `;
     for (let name in entries) {
@@ -99,7 +120,6 @@ const announceEntries = (client, target) => {
     // Announce Winner
     setTimeout(() => {
         announceWinner(client, target);
-        isQuipping = false;
     }, 1000 * 30);
 };
 
@@ -109,6 +129,9 @@ exports.onVote = (client, target, text, context) => {
         || parseInt(text) < 1 
         || parseInt(text) > maxEntries) {
         return false;
+    }
+    if (context['display-name'] in entries) {
+        client.say(target, '/me You may not vote if you have entered.');
     }
     addVote(context['display-name'], parseInt(text));
 };
@@ -135,7 +158,7 @@ const getWinner = () => {
 
 const announceWinner = (client, target) => {
     if (Object.keys(votes).length === 0) {
-        client.say(target, `No one voted! Try again next time.`);
+        client.say(target, `/me No one voted! Try again next time.`);
         return;
     }
 
@@ -143,7 +166,7 @@ const announceWinner = (client, target) => {
 
     let message = Object.keys(entries).reduce((carry, name, index) => {
         if (index+1 == winnerIndex) {
-            return `${name} won with ${getVoteCounts()[winnerIndex]} votes! "${entries[name]}"`;
+            return `/me ${name} won with ${getVoteCounts()[winnerIndex]} votes! "${entries[name]}"`;
         }
         return carry;
     }, '');
