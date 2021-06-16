@@ -199,3 +199,20 @@ function printMessage(message) {
     console.log(message);
     rl.prompt(true);
 }
+
+/*
+setInterval(() => {
+    printMessage(chalk.bold('Quote test!'));
+    onMessage(
+        config.cli.channel,
+        {
+            'display-name': config.username,
+            username: config.username,
+            message_type: 'chat',
+            color: '#0084ff'
+        },
+        '!randquote',
+        false
+    );
+}, 1000 * 60 * 1);
+*/

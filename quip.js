@@ -68,7 +68,7 @@ exports.initQuip = (client, target, text) => {
 
         // Go with what we have
         announceEntries(client, target);
-    }, 60 * 1000);
+    }, 120 * 1000);
 };
 
 const resetGame = () => {
@@ -132,6 +132,7 @@ exports.onVote = (client, target, text, context) => {
     }
     if (context['display-name'] in entries) {
         client.say(target, '/me You may not vote if you have entered.');
+        return;
     }
     addVote(context['display-name'], parseInt(text));
 };

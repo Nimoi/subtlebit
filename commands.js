@@ -88,7 +88,7 @@ module.exports = function (client) {
         },
         {
             signature: '!RANDQUOTE',
-            exclusive: true,
+            exclusive: false,
             execute(text, target, context) {
                 messages.randomQuote(client, target);
             }
