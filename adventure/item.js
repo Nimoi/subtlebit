@@ -1,9 +1,9 @@
 import {getRandomItem, getRandomInt} from './random.js';
+import * as fs from 'fs';
 
 export function getRandomWord() {
-    let f_contents = file(__DIR__ + '/dictionary.txt'); 
-    let line = f_contents[rand(0, count(f_contents) - 1)];
-    return str_replace(PHP_EOL, '', ucfirst(line));
+    const lines = fs.readFileSync('./dictionary.txt').split('\n');
+    return lines[Math.floor(Math.random() * lines.length)];
 }
 
 export function getGearSlots() {
@@ -43,8 +43,12 @@ export function getGearSlots() {
     };
 }
 
+function capitalizeFirstLetter(string) {
+  return string.charAt(0).toUpperCase() + string.slice(1);
+}
+
 function getSlotType(slot) {
-    return ucfirst(
+    return capitalizeFirstLetter(
         getRandomItem(
             getGearSlots()[slot]
         )
@@ -75,21 +79,21 @@ function generateItem(slot) {
     if (getRandomInt(0,1)) {
         name += 'the ';
     }
-    randomWord = getRandomWord();
+    let randomWord = getRandomWord();
     name += randomWord;
     return {
         slot: slot,
-        item: [
+        item: {
             name: name,
-            stat: getStatScore(randomWord) + $bonus,
+            stat: getStatScore(randomWord) + bonus,
             slot: slot
-        ]
+        }
     };
 }
 
 function getStatScore(word) {
-    let stat = strlen(word);
-    foreach(bonusWords() as bonusWord) {
+    let stat = word.length;
+    for (let bonusWord in bonusWords()) {
         if (word.includes(bonusWord) !== false) {
             stat += 10;
         }

@@ -4,7 +4,7 @@
 
 -[x] animals.js
 -[x] colors.js
--[] index.js
+-[x] index.js
 -[x] places.js
 -[x] words_blacklist.js
 -[] build_dictionary.js
