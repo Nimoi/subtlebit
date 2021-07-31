@@ -1,7 +1,6 @@
 const config = require('./config.json');
 const tmi = require('tmi.js');
 const emoji = require('node-emoji');
-const alex = require('alex');
 const cool = require('cool-ascii-faces');
 const cats = require('cat-ascii-faces');
 const yesNoWords = require('yes-no-words');
@@ -123,13 +122,6 @@ function printEmotes(emotes) {
 
 function handleChatMessage(context, message) {
     printMessage(chalk.rgb(200,200,200)(`* ${printUsername(context)} ${message}`));
-    let warnings = alex(message).messages;
-    if (! warnings.length) {
-        return;
-    }
-    warnings.forEach((warning) => {
-        printMessage(chalk.rgb(100,100,100)(warning.message));
-    });
 }
 
 function hasCommand(message) {

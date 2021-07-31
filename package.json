@@ -17,7 +17,6 @@
   },
   "homepage": "https://github.com/Nimoi/subtlebit#readme",
   "dependencies": {
-    "alex": "^9.1.0",
     "cat-ascii-faces": "^2.0.0",
     "cat-names": "^3.0.0",
     "chalk": "^4.1.1",
