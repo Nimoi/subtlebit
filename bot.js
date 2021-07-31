@@ -30,13 +30,39 @@ const opts = {
   channels: config.channels
 };
 
+var state = {
+    connection_timeout: 1,
+};
+
 const client = new tmi.client(opts);
 
 client.on('message', onMessage);
 client.on('connected', onConnected);
+client.on('disconnected', onDisconnected);
 client.connect();
 
 const commands = setupCommands(client);
+
+function onDisconnected (message) {
+    printMessage(chalk.red(`* Disconnected: ${message}`));
+    reconnect();
+}
+
+function reconnect() {
+    printMessage(chalk.yellow(`* Attempting reconnect in ${state.connection_timeout}s`));
+    setTimeout(() => {
+        client.connect().catch((err) => {
+            console.log('Connection error!', err)
+            state.conection_timeout *= 2;
+            reconnect();
+        });
+    }, state.connection_timeout * 1000);
+}
+
+function onConnected (addr, port) {
+  state.connection_timeout = 1;
+  printMessage(chalk.green(`* Connected to ${addr}:${port}`));
+}
 
 //markov.startBlabbin(client);
 
@@ -104,10 +130,6 @@ function handleChatMessage(context, message) {
     warnings.forEach((warning) => {
         printMessage(chalk.rgb(100,100,100)(warning.message));
     });
-}
-
-function onConnected (addr, port) {
-  printMessage(chalk.green(`* Connected to ${addr}:${port}`));
 }
 
 function hasCommand(message) {
