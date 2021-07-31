@@ -1,9 +1,9 @@
-import getRandomItem, getRandomInt from './random.js';
+import {getRandomItem, getRandomInt} from './random.js';
 
 export function getRandomWord() {
-    $f_contents = file(__DIR__ . '/dictionary.txt'); 
-    $line = $f_contents[rand(0, count($f_contents) - 1)];
-    return str_replace(PHP_EOL, '', ucfirst($line));
+    let f_contents = file(__DIR__ + '/dictionary.txt'); 
+    let line = f_contents[rand(0, count(f_contents) - 1)];
+    return str_replace(PHP_EOL, '', ucfirst(line));
 }
 
 export function getGearSlots() {
@@ -51,7 +51,7 @@ function getSlotType(slot) {
     );
 }
 
-function generateItemRandom() {
+export function generateItemRandom() {
     return generateItem(
         getRandomItem(
             Object.keys(getGearSlots())
@@ -59,7 +59,7 @@ function generateItemRandom() {
     );
 }
 
-function generateItemBySlot(slot) {
+export function generateItemBySlot(slot) {
     return generateItem(slot)['item'];
 }
 

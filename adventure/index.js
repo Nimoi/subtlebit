@@ -1,6 +1,11 @@
 import Records from './records.js';
 import Mining from './mining.js';
 import WoodCutting from './woodcutting.js';
+import Place from './places.js';
+import {getRandomWord, generateItemBySlot, generateItemRandom} from './item.js';
+import Color from './colors.js';
+import Enemy from './enemies.js';
+import getRandomInt from './random.js';
 
 /**
  * Adventure Game
@@ -142,32 +147,33 @@ class Adventure
         this.records = new Records(this.user);
         this.player = this.records.getPlayerRecord();
         this.player.stats = {
-            attack: empty(this.player['gear']['weapon'])
+            attack: this.player['gear']['weapon'] === null
                 ? 3
                 : this.player['gear']['weapon']['stat'],
-            defense: empty(this.player['gear']['head'])
+            defense: this.player['gear']['head'] === null
                 ? 3
                 : this.player['gear']['head']['stat']
         };
-        if (! empty(this.player['gear']['head'])) {
+        if (! this.player['gear']['head']) {
             this.player['gear']['head']['slot'] = 'head';
         }
-        if (! empty(this.player['gear']['weapon'])) {
+        if (! this.player['gear']['weapon']) {
             this.player['gear']['weapon']['slot'] = 'weapon';
         }
-        if (empty(this.player['experience'])) {
+        if (this.player['experience']) {
             this.player['experience'] = 0;
         }
-        if (empty(this.player['level'])) {
+        if (this.player['level']) {
             this.player['level'] = 1;
         }
-        if (empty(this.player['health'])) {
+        if (this.player['health']) {
             this.player['health'] = 100;
         }
     }
 
     begin() {
-        if (command = this.isInputACommand()) {
+        let command = this.isInputACommand()
+        if (command) {
             return this[command]();
         }
         return this.fight(this.adventureStartMessage());
@@ -183,13 +189,13 @@ class Adventure
     }
 
     removePoints() {
-        return ' $removepoints("$user","'+betDifference+'","'+betDifference+'","You died and lost $value tokens","","false") ';
+        //return ' $removepoints("$user","'+betDifference+'","'+betDifference+'","You died and lost $value tokens","","false") ';
     }
 
     adventureStartMessage() {
         let adventureStart = '/me $user ';
         adventureStart += '(❤️'+this.player['health']+') ';
-        place = (new Place).random();
+        let place = (new Place).random();
         adventureStart += 'travels to the '+place+' of '+getRandomWord() + '. ';
         return adventureStart;
     }
@@ -199,9 +205,9 @@ class Adventure
     }
 
     isInputACommand() {
-        response = false;
+        let response = false;
         for (let command in this.commands) {
-            if (substr(this.input, 0, strlen(command)) === command) {
+            if (this.input.substr(0, command.length) === command) {
                 response = command;
             }
         }
@@ -213,7 +219,7 @@ class Adventure
     }
 
     potion() {
-        potion = this.player['gear']['potion'];
+        let potion = this.player['gear']['potion'];
         if (potion === null) {
             this.say('/me You do not have any potions.');
         }
@@ -224,20 +230,21 @@ class Adventure
     }
 
     sell() {
-        params = trim(substr(this.input, strlen('sell')));
+        let params = this.input.substr('sell'.length).trim();
         if (! params) {
             this.say('/me Sell your items with !adventure sell [ITEM]');
             return;
         }
         // Check if item is a slot
-        weaponNames = ['weapon', 'sword'];
-        headNames = ['head', 'hat', 'helmet', 'helm'];
-        potionNames = ['potion', 'elixir', 'flask'];
+        let weaponNames = ['weapon', 'sword'];
+        let headNames = ['head', 'hat', 'helmet', 'helm'];
+        let potionNames = ['potion', 'elixir', 'flask'];
 
-        isWeaponSlot = in_array(params, weaponNames) ? 'weapon' : false;
-        isHeadSlot = in_array(params, headNames) ? 'head' : false;
-        isPotionSlot = in_array(params, potionNames) ? 'potion' : false;
+        let isWeaponSlot = params.indexOf(weaponNames) !== -1 ? 'weapon' : false;
+        let isHeadSlot = params.indexOf(headNames) !== -1 ? 'head' : false;
+        let isPotionSlot = params.indexOf(potionNames) !== -1 ? 'potion' : false;
         
+        let item;
         if (isWeaponSlot) {
             item = this.player['gear'][isWeaponSlot];
         } else if (isHeadSlot) {
@@ -247,7 +254,7 @@ class Adventure
         } else {
             // Check if item is named
             item = this.player['gear'].find((item) => {
-                return strtolower(item['name']) == strtolower(params);
+                return item['name'].toLowerCase() == params.toLowerCase();
             });
         }
         if (item === null) {
@@ -264,13 +271,13 @@ class Adventure
     }
 
     compareNewGear(slot, item) {
-        currentGear = this.player['gear'][slot];
+        let currentGear = this.player['gear'][slot];
         return currentGear === null
             || currentGear['stat'] < item['stat'];
     }
 
     inventory() {
-        hasGear = this.player['gear'].filter((gear) => {
+        let hasGear = this.player['gear'].filter((gear) => {
             return gear !== null;
         }).length > 0;
         if (! hasGear) {
@@ -278,7 +285,7 @@ class Adventure
             return;
         }
 
-        itemValues = this.player['gear'].filter((item) => {
+        let itemValues = this.player['gear'].filter((item) => {
             return item !== null;
         // TODO: fix
         //})->sortByDesc('slot')->map(function (item) {
@@ -286,14 +293,14 @@ class Adventure
             //return this.getItemName(item) . ' $'.item['value'];
         });
 
-        message = '/me ' + this.user + '\'s inventory: ';
-        message += implode(', ', itemValues);
+        let message = '/me ' + this.user + '\'s inventory: ';
+        message += itemValues.join(', ');
         //message .= '. Try !adventure sell <item>';
         this.say(message);
     }
 
     stats() {
-        message = '/me ' + this.user + '\'s stats: ';
+        let message = '/me ' + this.user + '\'s stats: ';
         message += '💗'+this.player['health']+', ';
         message += '⚔️'+this.player['stats']['attack']+', ';
         message += '🛡️'+this.player['stats']['defense']+', ';
@@ -302,7 +309,7 @@ class Adventure
     }
 
     getItemName(item) {
-        icon = '🛡️';
+        let icon = '🛡️';
         if (item['slot'] === 'weapon') {
             icon = '⚔️';
         }
@@ -312,19 +319,19 @@ class Adventure
         return item['name'] + ' ('+icon.item['stat']+')';
     }
 
-    fight(message) {
+    fight(response) {
         // TODO: build message
-        enemy = this.getRandomEnemy();
-        win = this.battle(this.player['stats'], enemy['stats']);
-        wordStartsWithVowel = this.wordStartsVowel(enemy['type']);
+        let enemy = this.getRandomEnemy();
+        let win = this.battle(this.player['stats'], enemy['stats']);
+        //let wordStartsWithVowel = this.wordStartsVowel(enemy['type']);
         //response = wordStartsWithVowel ? 'An' : 'A';
-        response = enemy['name']+' the '+enemy['type'];
+        response += enemy['name']+' the '+enemy['type'];
         response += ' (⚔️'+enemy['stats']['attack']+', 🛡️'+enemy['stats']['defense']+')';
         response += ' attacks!';
-        experience = 0;
+        let experience = 0;
         response += this.damagePlayer(enemy);
         if (enemy['gear']['bomb']) {
-            lost = 50;
+            let lost = 50;
             response += ' The enemy dropped a bomb! You lost '+lost+' tokens. $removepoints("$user","'+lost+'","'+lost+'","","","false") ';
         }
         if (this.player['health'] <= 0) {
@@ -338,7 +345,7 @@ class Adventure
             this.player['wins']++;
             experience = enemy['stats']['defense'] * 10;
             response += ' You defeated it';
-            if (! empty(this.player['gear']['weapon'])) {
+            if (! this.player['gear']['weapon']) {
                 response += ' with your '.this.getItemName(this.player['gear']['weapon']);
             }
             response += '!';
@@ -356,14 +363,14 @@ class Adventure
             experience = enemy['stats']['attack'];
             response += ' It tore you up but you managed to escape.';
         }
-        this.player['experience'] = round(experience + this.player['experience'], 2);
+        this.player['experience'] = (experience + this.player['experience']).toFixed(2);
         this.records.savePlayer(this.player);
         response += '. You earned '+experience+'XP.';
         this.say(response);
     }
 
     damagePlayer(enemy) {
-        damage = enemy['stats']['attack'] - this.player['stats']['defense'];
+        let damage = enemy['stats']['attack'] - this.player['stats']['defense'];
         if (damage <= 0) {
             //return ' You takes no damage.';
             return '';
@@ -373,9 +380,9 @@ class Adventure
     }
 
     wordStartsVowel(word) {
-        vowels = ['a','e','i','o','u'];
-        firstLetterOfWord = strtolower(substr(word, 0, 1));
-        return in_array(firstLetterOfWord, vowels);
+        let vowels = ['a','e','i','o','u'];
+        let firstLetterOfWord = word.substr(0, 1).toLowerCase();
+        return vowels.indexOf(firstLetterOfWord) !== -1;
     }
 
     battle(player, enemy) {
@@ -384,10 +391,10 @@ class Adventure
     }
 
     takeItOrLeaveIt(response, slot, item) {
-        if (! strpos(response, 'Dropped: ')) {
-            response += ' Dropped: '.this.getItemName(item);
+        if (response.indexOf('Dropped: ') === -1) {
+            response += ' Dropped: '+this.getItemName(item);
         } else {
-            response += ' Also dropped: '.this.getItemName(item);
+            response += ' Also dropped: '+this.getItemName(item);
         }
         if (this.compareNewGear(slot, item)) {
             this.player['gear'][slot] = item;
@@ -400,21 +407,21 @@ class Adventure
     }
 
     getRandomEnemy() {
-        color = (new Color()).random();
-        enemy = (new Enemy()).random();
-        gear = {
-            head: rand(0,5) === 5 ? null : generateItemBySlot('head'),
-            weapon: rand(0,5) === 5 ? null : generateItemBySlot('weapon'),
-            potion: rand(0,5) === 5 ? null : generateItemBySlot('potion'),
-            bomb: rand(0,3) === 3
+        let color = (new Color()).random();
+        let enemy = (new Enemy()).random();
+        let gear = {
+            head: getRandomInt(0,5) === 5 ? null : generateItemBySlot('head'),
+            weapon: getRandomInt(0,5) === 5 ? null : generateItemBySlot('weapon'),
+            potion: getRandomInt(0,5) === 5 ? null : generateItemBySlot('potion'),
+            bomb: getRandomInt(0,3) === 3
         };
         // attack - strlen(name)
         // defense - attack * [.25, .5, .75, 1, 1.25, 1.5, 1.75]
         // FORMULA = ([userdef] - [enematk]) - ([enemdef] - [useratk])
         // You defeated X with your Y. 
         // (depending on how much damage positive / negative score:) It was a critical hit! Devastating, etc
-        attack = strlen(enemy) + (this.player['stats']['defense'] * 0.5) + (this.player['stats']['attack'] * 0.5);
-        multipliers = [
+        let attack = enemy.length + (this.player['stats']['defense'] * 0.5) + (this.player['stats']['attack'] * 0.5);
+        let multipliers = [
             0.25,
             0.5,
             0.75,
@@ -423,14 +430,14 @@ class Adventure
             1.5,
             1.75
         ];
-        defense = attack * multipliers[rand(0, count(multipliers) - 1)];
+        let defense = attack * multipliers[getRandomInt(0, multipliers.length - 1)];
         return {
             color: color,
             type: enemy,
             name: getRandomWord(),
             gear: gear,
             stats: {
-                attack: strlen(enemy) + (this.player['stats']['defense'] / 2),
+                attack: enemy.length + (this.player['stats']['defense'] / 2),
                 defense: defense
             }
         };
@@ -455,9 +462,9 @@ class Adventure
     }
 
     test() {
-        response = '';
-        for(i=0; i < 3; i++) {
-            item = generateItemRandom();
+        let response = '';
+        for(let i=0; i < 3; i++) {
+            let item = generateItemRandom();
             response += this.getItemName(item['item']) + ' ';
         }
         console.log(response);
