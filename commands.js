@@ -5,7 +5,7 @@ const timer = require('./timer.js');
 const markov = require('./markov.js');
 const teller = require('fortune-teller');
 const quip = require('./quip.js');
-import {haveAnAdventure} from require('./aventure/index.js');
+const adventure = require(__dirname+'/adventure/index.js');
 
 module.exports = function (client) {
     return [
@@ -226,9 +226,9 @@ module.exports = function (client) {
         },
         {
             signature: '!ADVENTURE',
-            exclusive: false,
+            exclusive: true,
             execute(text, target, context) {
-                haveAnAdventure(client, target, text, context);
+                adventure.haveAnAdventure(client, target, text, context);
             }
         },
         // const { b1ff, censor, chef, cockney, eleet, fudd, jethro, pirate, jibberish, ken, kenny, klaus, ky00te, LOLCAT, nethackify, newspeak, nyc, rasterman, scottish, scramble, spammer, studly, upsidedown } = require('talk-like-a');

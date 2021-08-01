@@ -1,65 +1,62 @@
-<?php
+const fs = require('fs');
 
 class Records
 {
-    public $user;
-
-    /**
-     * Player constructor.
-     * @param $player
-     * @param $user
-     */
-    public function __construct($user)
+    constructor(user)
     {
-        $this->user = $user;
+        this.user = user;
+        fs.readdir('records', (err, files) => {
+            if (files.indexOf(this.user) === -1) {
+                return this.addPlayer();
+            }
+            return this.getPlayer();
+        });
     }
 
-    public function getPlayerRecord() {
-        $users = scandir('records');
-        if (! in_array($this->user, $users)) {
-            return $this->addPlayer();
-        }
-        return $this->getPlayer();
+    getPlayerRecord() {
+        return this.player;
     }
 
-    public function getUserFilePath() {
-        return 'records/'.$this->user;
+    getUserFilePath() {
+        return 'records/'+this.user;
     }
 
-    public function getFreshPlayer() {
-        return [
-            'tokens' => 0,
-            'wins' => 0,
-            'losses' => 0,
-            'gear' => [
-                'head' => null,
-                'weapon' => null,
-                'potion' => null
-            ],
-            'health' => 100
-        ];
+    getFreshPlayer() {
+        return {
+            tokens: 0,
+            wins: 0,
+            losses: 0,
+            gear: {
+                head: null,
+                weapon: null,
+                potion: null
+            },
+            health: 100
+        };
     }
 
-    public function addPlayer() {
-        $player = $this->getFreshPlayer();
-        $path = $this->getUserFilePath();
-        $this->write($path, json_encode($player));
-        return $player;
+    addPlayer() {
+        let player = this.getFreshPlayer();
+        let path = this.getUserFilePath();
+        this.write(path, player);
+        return player;
     }
 
-    public function getPlayer() {
-        $path = $this->getUserFilePath();
-        return json_decode(file_get_contents($path), true);
+    getPlayer() {
+        let path = this.getUserFilePath();
+        fs.readFile(path, (err, data) => {
+          if (err) throw err;
+          this.player = data;
+        });
     }
 
-    public function savePlayer($player) {
-        $path = $this->getUserFilePath();
-        $this->write($path, json_encode($player));
+    savePlayer(player) {
+        this.write(this.getUserFilePath(), JSON.stringify(player));
     }
 
-    public function write($path, $text) {
-        $fp = fopen($path, 'w+');
-        fwrite($fp, $text);
-        fclose($fp);
+    write(path, text) {
+        fs.writeFileSync(path, text);
     }
 }
+
+exports.default = Records;

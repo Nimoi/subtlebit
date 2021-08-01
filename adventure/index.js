@@ -1,11 +1,11 @@
-import Records from './records.js';
-import Mining from './mining.js';
-import WoodCutting from './woodcutting.js';
-import Place from './places.js';
-import {getRandomWord, generateItemBySlot, generateItemRandom} from './item.js';
-import Color from './colors.js';
-import Enemy from './enemies.js';
-import getRandomInt from './random.js';
+const Records = require('./records.js');
+//const Mining = require('./mining.js');
+//const WoodCutting = require('./woodcutting.js');
+const Place = require('./places.js');
+const {getRandomWord, generateItemBySlot, generateItemRandom} = require('./item.js');
+const Color = require('./colors.js');
+const Enemy = require('./enemies.js');
+const getRandomInt = require('./random.js');
 
 /**
  * Adventure Game
@@ -96,7 +96,8 @@ import getRandomInt from './random.js';
 //$tokens = isset($_GET['tokens']) ? intval($_GET['tokens']) : null;
 //$input = isset($_GET['input']) ? $_GET['input'] : null;
 
-export function haveAnAdventure(client, target, text, context) {
+exports.haveAnAdventure = (client, target, text, context) => {
+    console.log(client, target, text, context);
     let adventure = new Adventure(client, target, text, context);
     adventure.begin();
 }
@@ -443,6 +444,7 @@ class Adventure
         };
     }
 
+    /*
     mining() {
         return (new Mining(
             this.user,
@@ -460,6 +462,7 @@ class Adventure
             this.player
         )).begin();
     }
+    */
 
     test() {
         let response = '';
@@ -488,4 +491,3 @@ class Adventure
 }
 
 //echo haveAnAdventure(user, tokens, input);
-

@@ -1,72 +1,71 @@
-<?php
-
-require __DIR__ . '/vendor/autoload.php';
-
-use Carbon\Carbon;
+const datetime = require('./datetime');
 
 class Skill
 {
-    public $name = 'skilling';
-    public $resource = 'skillpoints';
-    public $location = 'Dojo';
+    constructor(client) {
+        this.name = 'skilling';
+        this.resource = 'skillpoints';
+        this.location = 'Dojo';
 
-    /**
-     * Skill constructor.
-     */
-    public function __construct($user, $input, $tokens, $player)
-    {
-        $this->user = $user;
-        $this->input = $input;
-        $this->tokens = $tokens;
-        $this->player = $player;
-        $this->records = new Records($user);
+        this.user = $user;
+        this.input = $input;
+        this.tokens = $tokens;
+        this.player = $player;
+        this.records = new Records($user);
+
+        this.client = client;
     }
 
-    public function begin()
+    begin()
     {
-        if (! array_key_exists('skills', $this->player)
-            || ! array_key_exists($this->name, $this->player['skills'])) {
-            $this->setup();
+        if (! array_key_exists('skills', this.player)
+            || ! array_key_exists(this.name, this.player['skills'])) {
+            this.setup();
             return;
         }
 
-        echo '/me $user started '.$this->name.' '.$this->timeSinceStart()
-            .' in the '.$this->player['skills'][$this->name]['place']
-            .'. They have collected '.$this->getResource().' '.$this->resource.'.';
+        this.client.say('/me $user started '+this.name+' '+this.timeSinceStart()
+            +' in the '+this.player['skills'][this.name]['place']
+            +'. They have collected '+this.getResource()+' '+this.resource+'.');
     }
 
-    private function setup()
+    setup()
     {
-        if (! array_key_exists('skills', $this->player)) {
-            $this->player['skills'] = [];
+        if (! array_key_exists('skills', this.player)) {
+            this.player['skills'] = [];
         }
-        $this->player['skills'][$this->name] = [
-            'started_at' => Carbon::now()->toDateTimeString(),
-            'place' => $this->location.' of '.getRandomWord()
-        ];
-        $this->records->savePlayer($this->player);
-        echo '/me $user begins '.$this->name.' in the '.$this->player['skills'][$this->name]['place'].'.';
+        this.player['skills'][this.name] = {
+            started_at: datetime.formatedTimestamp(),
+            place: this.location+' of '+getRandomWord()
+        };
+        this.records.savePlayer(this.player);
+        this.client.say('/me $user begins '+this.name+' in the '+this.player['skills'][this.name]['place']+'.');
     }
 
-    private function getResource()
+    getResource()
     {
-        return $this->secondsSinceStart() / 10;
+        return this.secondsSinceStart() / 10;
     }
 
-    private function parseTimestamp()
+    parseTimestamp()
     {
-        return Carbon::createFromTimeStamp(
-            strtotime($this->player['skills'][$this->name]['started_at'])
-        );
+        // TODO: fix
+        //return Carbon::createFromTimeStamp(
+            //strtotime(this.player['skills'][this.name]['started_at'])
+        //);
     }
 
-    private function secondsSinceStart()
+    secondsSinceStart()
     {
-        return $this->parseTimestamp()->diffInSeconds();
+        // TODO: fix
+        //return this.parseTimestamp()->diffInSeconds();
     }
 
-    private function timeSinceStart()
+    timeSinceStart()
     {
-        return $this->parseTimestamp()->diffForHumans();
+        // TODO: fix
+        //return this.parseTimestamp()->diffForHumans();
     }
 }
+
+exports.default = Skill;

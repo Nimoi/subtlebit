@@ -1,18 +1,21 @@
-import getRandomInt from './random.js';
+const getRandomItem = require('./random.js');
 
-export Class Place {
-    function random() {
-        let max = this.names.length - 1;
-        return getRandomItem(this.names);
+class Place {
+    constructor() {
+        this.names = [
+            'City',
+            'Village',
+            'Swamp',
+            'Mountains',
+            'Mines',
+            'Forest',
+            'Sewers'
+        ];
     }
 
-    const names = [
-        'City',
-        'Village',
-        'Swamp',
-        'Mountains',
-        'Mines',
-        'Forest',
-        'Sewers'
-    ];
+    random() {
+        return getRandomItem(this.names);
+    }
 }
+
+exports.default = Place;

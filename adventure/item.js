@@ -1,12 +1,12 @@
-import {getRandomItem, getRandomInt} from './random.js';
-import * as fs from 'fs';
+const {getRandomItem, getRandomInt} = require('./random.js');
+const fs = require('fs');
 
-export function getRandomWord() {
+var getRandomWord = exports.getRandomWord = () => {
     const lines = fs.readFileSync('./dictionary.txt').split('\n');
     return lines[Math.floor(Math.random() * lines.length)];
 }
 
-export function getGearSlots() {
+var getGearSlots = exports.getGearSlots = () => {
     return {
         weapon: [
             'sword',
@@ -55,7 +55,7 @@ function getSlotType(slot) {
     );
 }
 
-export function generateItemRandom() {
+exports.generateItemRandom = () => {
     return generateItem(
         getRandomItem(
             Object.keys(getGearSlots())
@@ -63,7 +63,7 @@ export function generateItemRandom() {
     );
 }
 
-export function generateItemBySlot(slot) {
+exports.generateItemBySlot = (slot) => {
     return generateItem(slot)['item'];
 }
 

@@ -1,8 +1,4 @@
-<?php
-
-require __DIR__ . '/vendor/autoload.php';
-
-use Carbon\Carbon;
+const Skill = require('./skill.js');
 
 /**
  * Ideas
@@ -16,7 +12,12 @@ use Carbon\Carbon;
 
 class Mining extends Skill
 {
-    public $name = 'mining';
-    public $resource = 'stones';
-    public $location = 'Mines';
+    constructor() {
+        super();
+        this.name = 'mining';
+        this.resource = 'stones';
+        this.location = 'Mines';
+    }
 }
+
+exports.default = Mining;
