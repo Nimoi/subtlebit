@@ -1,4 +1,4 @@
-const getRandomItem = require('./random.js');
+const {getRandomItem} = require('./random.js');
 
 class Color {
     constructor() {
@@ -758,4 +758,4 @@ class Color {
 
 }
 
-exports.default = Color;
+exports.Color = Color;

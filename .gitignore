@@ -2,3 +2,7 @@ node_modules/
 config.json
 scratch
 chatlog.sqlite3
+messages.log
+quips.json
+adventure/records/*
+adventure/dictionary.txt

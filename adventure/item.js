@@ -2,7 +2,8 @@ const {getRandomItem, getRandomInt} = require('./random.js');
 const fs = require('fs');
 
 var getRandomWord = exports.getRandomWord = () => {
-    const lines = fs.readFileSync('./dictionary.txt').split('\n');
+    const file = fs.readFileSync(__dirname+'/dictionary.txt', 'utf-8');
+    const lines = file.split('\n');
     return lines[Math.floor(Math.random() * lines.length)];
 }
 

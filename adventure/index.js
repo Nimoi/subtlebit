@@ -1,11 +1,11 @@
-const Records = require('./records.js');
+const {Records} = require(__dirname+'/records.js');
 //const Mining = require('./mining.js');
 //const WoodCutting = require('./woodcutting.js');
-const Place = require('./places.js');
+const {Place} = require('./places.js');
 const {getRandomWord, generateItemBySlot, generateItemRandom} = require('./item.js');
-const Color = require('./colors.js');
-const Enemy = require('./enemies.js');
-const getRandomInt = require('./random.js');
+const {Color} = require('./colors.js');
+const {Enemy} = require('./enemies.js');
+const {getRandomInt} = require('./random.js');
 
 /**
  * Adventure Game
@@ -96,10 +96,9 @@ const getRandomInt = require('./random.js');
 //$tokens = isset($_GET['tokens']) ? intval($_GET['tokens']) : null;
 //$input = isset($_GET['input']) ? $_GET['input'] : null;
 
-exports.haveAnAdventure = (client, target, text, context) => {
-    console.log(client, target, text, context);
+exports.haveAnAdventure = async (client, target, text, context) => {
     let adventure = new Adventure(client, target, text, context);
-    adventure.begin();
+    await adventure.initialize();
 }
 
 class Adventure
@@ -109,13 +108,6 @@ class Adventure
         this.target = target;
         this.text = text;
         this.context = context;
-
-        console.log(
-            client,
-            target,
-            text,
-            context
-        );
 
         this.user;
         this.userTokens;
@@ -140,13 +132,33 @@ class Adventure
             'woodcutting'
         ];
 
-        // TODO: fix these
-        //this.user = user;
-        //this.input = input;
+        this.user = context.username;
+        this.input = text;
         //this.userTokens = tokens;
+        console.log(
+            text,
+            context
+        );
+    }
 
+    async initialize() {
         this.records = new Records(this.user);
-        this.player = this.records.getPlayerRecord();
+        this.player = await this.records.initialize();
+        console.log(
+            this.records,
+            this.player
+        );
+        this.setupPlayer();
+        this.begin();
+    }
+
+    setupPlayer() {
+        console.log('player', this.player);
+        if (! this.player) {
+            return setTimeout(() => {
+                this.setupPlayer();
+            }, 1000);
+        }
         this.player.stats = {
             attack: this.player['gear']['weapon'] === null
                 ? 3
@@ -155,19 +167,13 @@ class Adventure
                 ? 3
                 : this.player['gear']['head']['stat']
         };
-        if (! this.player['gear']['head']) {
-            this.player['gear']['head']['slot'] = 'head';
-        }
-        if (! this.player['gear']['weapon']) {
-            this.player['gear']['weapon']['slot'] = 'weapon';
-        }
-        if (this.player['experience']) {
+        if (! this.player['experience']) {
             this.player['experience'] = 0;
         }
-        if (this.player['level']) {
+        if (! this.player['level']) {
             this.player['level'] = 1;
         }
-        if (this.player['health']) {
+        if (! this.player['health']) {
             this.player['health'] = 100;
         }
     }
@@ -194,7 +200,7 @@ class Adventure
     }
 
     adventureStartMessage() {
-        let adventureStart = '/me $user ';
+        let adventureStart = '/me '+this.user+' ';
         adventureStart += '(❤️'+this.player['health']+') ';
         let place = (new Place).random();
         adventureStart += 'travels to the '+place+' of '+getRandomWord() + '. ';
@@ -227,7 +233,7 @@ class Adventure
         this.player['health'] += potion['stat'];
         this.player['gear']['potion'] = null;
         this.records.savePlayer(this.player);
-        this.say('/me $user drank their '+potion['name']+' and gained '+potion['stat']+' health.');
+        this.say('/me '+this.user+' drank their '+potion['name']+' and gained '+potion['stat']+' health.');
     }
 
     sell() {
@@ -267,7 +273,7 @@ class Adventure
         this.records.savePlayer(this.player);
         return this.addPoints(
             item['stat'] * 10,
-            '/me $user sold their '+item['name']+' for $value tokens.'
+            '/me '+this.user+' sold their '+item['name']+' for $value tokens.'
         );
     }
 
@@ -317,7 +323,7 @@ class Adventure
         if (item['slot'] === 'potion') {
             icon = '💗';
         }
-        return item['name'] + ' ('+icon.item['stat']+')';
+        return item['name'] + ' ('+icon+item['stat']+')';
     }
 
     fight(response) {
@@ -336,7 +342,7 @@ class Adventure
             response += ' The enemy dropped a bomb! You lost '+lost+' tokens. $removepoints("$user","'+lost+'","'+lost+'","","","false") ';
         }
         if (this.player['health'] <= 0) {
-            response += ' $user has died!';
+            response += ' '+this.user+' has died!';
             this.say(response);
             this.player = this.records.getFreshPlayer();
             this.records.savePlayer(this.player);
@@ -486,7 +492,8 @@ class Adventure
     }
 
     say(message) {
-        this.client.say(this.target, `${message}`);
+        //this.client.say(this.target, `${message}`);
+        console.log(message);
     }
 }
 

@@ -1,4 +1,4 @@
-const getRandomItem = require('./random.js');
+const {getRandomItem} = require('./random.js');
 
 class Enemy {
     constructor() {

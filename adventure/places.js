@@ -1,4 +1,4 @@
-const getRandomItem = require('./random.js');
+const {getRandomItem} = require('./random.js');
 
 class Place {
     constructor() {
@@ -18,4 +18,4 @@ class Place {
     }
 }
 
-exports.default = Place;
+exports.Place = Place;

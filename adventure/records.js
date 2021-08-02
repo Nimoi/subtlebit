@@ -4,21 +4,29 @@ class Records
 {
     constructor(user)
     {
+        console.log('construct records!');
         this.user = user;
-        fs.readdir('records', (err, files) => {
-            if (files.indexOf(this.user) === -1) {
-                return this.addPlayer();
-            }
-            return this.getPlayer();
+    }
+
+    async initialize() {
+        return new Promise(resolve => {
+            fs.readdir(__dirname+'/records', (err, files) => {
+                console.log(files);
+                if (files.indexOf(this.user) === -1) {
+                    return resolve(this.addPlayer());
+                }
+                return resolve(this.getPlayer());
+            });
         });
     }
 
     getPlayerRecord() {
+        console.log('player record', this.player);
         return this.player;
     }
 
     getUserFilePath() {
-        return 'records/'+this.user;
+        return __dirname+'/records/'+this.user;
     }
 
     getFreshPlayer() {
@@ -39,15 +47,14 @@ class Records
         let player = this.getFreshPlayer();
         let path = this.getUserFilePath();
         this.write(path, player);
-        return player;
+        this.player = player;
+        return this.player;
     }
 
     getPlayer() {
         let path = this.getUserFilePath();
-        fs.readFile(path, (err, data) => {
-          if (err) throw err;
-          this.player = data;
-        });
+        this.player = JSON.parse(fs.readFileSync(path));
+        return this.player;
     }
 
     savePlayer(player) {
@@ -55,8 +62,8 @@ class Records
     }
 
     write(path, text) {
-        fs.writeFileSync(path, text);
+        fs.writeFileSync(path, JSON.stringify(text));
     }
 }
 
-exports.default = Records;
+exports.Records = Records;
