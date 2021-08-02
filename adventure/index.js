@@ -10,13 +10,6 @@ const {getRandomInt} = require('./random.js');
 /**
  * Adventure Game
  *
- *   If a player chooses to Battle, the battle minigame starts:
- *
- *   - Every 5 seconds (multiplied by players haste) the player will swing at the enemy. The enemy will also attack on their own timer.
- *   - Maybe we'll let the player interact to use a potion or something
- *   - Unlock abilities to use during combat
- *   - Special effect armor like reflects damage or spiked armor
- *
  *   Other Ideas:
  *
  *   - Trade stuff with other players
@@ -75,7 +68,8 @@ class Adventure
 
         this.user = context.username;
         this.input = text;
-        this.queue = [];
+        this.messages = [];
+        this.sayQueue();
         console.log(
             text,
             context
@@ -123,14 +117,16 @@ class Adventure
 
     begin() {
         let command = this.isInputACommand()
+        console.log(command);
         if (command) {
             return this[command]();
         }
-        return this.fight(this.adventureStartMessage());
+        this.say(this.adventureStartMessage());
+        return this.fight();
     }
 
     adventureStartMessage() {
-        let adventureStart = '/me '+this.user+' ';
+        let adventureStart = ''+this.user+' ';
         adventureStart += '(❤️'+this.player['health']+') ';
         let place = (new Place).random();
         adventureStart += 'travels to the '+place+' of '+getRandomWord() + '. ';
@@ -142,13 +138,9 @@ class Adventure
     }
 
     isInputACommand() {
-        let response = false;
-        for (let command in this.commands) {
-            if (this.input.substr(0, command.length) === command) {
-                response = command;
-            }
-        }
-        return response;
+        return this.commands.find((command) => {
+            return this.input.trim().substr(0, command.length) === command
+        });
     }
 
     drink() {
@@ -158,18 +150,18 @@ class Adventure
     potion() {
         let potion = this.player['gear']['potion'];
         if (potion === null) {
-            this.say('/me You do not have any potions.');
+            this.say('You do not have any potions.');
         }
         this.player['health'] += potion['stat'];
         this.player['gear']['potion'] = null;
         this.records.savePlayer(this.player);
-        this.say('/me '+this.user+' drank their '+potion['name']+' and gained '+potion['stat']+' health.');
+        this.say(this.user+' drank their '+potion['name']+' and gained (❤️'+potion['stat']+') health.');
     }
 
     sell() {
         let params = this.input.substr('sell'.length).trim();
         if (! params) {
-            this.say('/me Sell your items with !adventure sell [ITEM]');
+            this.say('Sell your items with !adventure sell [ITEM]');
             return;
         }
         // Check if item is a slot
@@ -195,7 +187,7 @@ class Adventure
             });
         }
         if (item === null) {
-            this.say('/me You don\'t appear to have any '+params+'.');
+            this.say('You don\'t appear to have any '+params+'.');
             return;
         }
         this.player['sold'] = item;
@@ -203,7 +195,7 @@ class Adventure
         this.records.savePlayer(this.player);
         return this.addPoints(
             item['stat'] * 10,
-            '/me '+this.user+' sold their '+item['name']+' for $value tokens.'
+            this.user+' sold their '+item['name']+' for $value tokens.'
         );
     }
 
@@ -218,7 +210,7 @@ class Adventure
             return gear !== null;
         }).length > 0;
         if (! hasGear) {
-            this.say('/me ' + this.user + ' has no gear. Try having some !adventure');
+            this.say(this.user + ' has no gear. Try having some !adventure');
             return;
         }
 
@@ -230,14 +222,14 @@ class Adventure
             //return this.getItemName(item) . ' $'.item['value'];
         });
 
-        let message = '/me ' + this.user + '\'s inventory: ';
+        let message = this.user + '\'s inventory: ';
         message += itemValues.join(', ');
         //message .= '. Try !adventure sell <item>';
         this.say(message);
     }
 
     stats() {
-        let message = '/me ' + this.user + '\'s stats: ';
+        let message = this.user + '\'s stats: ';
         message += '💗'+this.player['health']+', ';
         message += '⚔️'+this.player['stats']['attack']+', ';
         message += '🛡️'+this.player['stats']['defense']+', ';
@@ -256,24 +248,23 @@ class Adventure
         return item['name'] + ' ('+icon+item['stat']+')';
     }
 
-    fight(response) {
-        // TODO: build message
+    fight() {
         let enemy = this.getRandomEnemy();
         let win = this.battle(this.player['stats'], enemy['stats']);
         //let wordStartsWithVowel = this.wordStartsVowel(enemy['type']);
         //response = wordStartsWithVowel ? 'An' : 'A';
-        response += enemy['name']+' the '+enemy['type'];
+        let response = enemy['name']+' the '+enemy['type'];
         response += ' (⚔️'+enemy['stats']['attack']+', 🛡️'+enemy['stats']['defense']+')';
         response += ' attacks!';
+        this.say(response + this.damagePlayer(enemy));
         let experience = 0;
-        response += this.damagePlayer(enemy);
         if (this.player['health'] <= 0) {
-            response += ' '+this.user+' has died!';
-            this.say(response);
+            this.say(this.user+' has died!');
             this.player = this.records.getFreshPlayer();
             this.records.savePlayer(this.player);
             return;
         }
+        response = '';
         if (win) {
             this.player['wins']++;
             experience = enemy['stats']['defense'] * 10;
@@ -396,15 +387,23 @@ class Adventure
     */
 
     help() {
-        this.say('/me Go on an adventure here in this chat. Earn some XP. Find some loot. Get dead maybe too? Try !adventure commands');
+        this.say('Go on an adventure here in this chat. Earn some XP. Find some loot. Get dead maybe too? Try !adventure commands');
     }
 
     commands() {
-        this.say('/me !adventure - go on an adventure, !adventure potion - drink your potion, !adventure inventory - check your gear, !adventure sell - sell your gear, !adventure help - learn more');
+        this.say('!adventure - go on an adventure, !adventure potion - drink your potion, !adventure inventory - check your gear, !adventure sell - sell your gear, !adventure help - learn more');
     }
 
     say(message) {
-        ///this.client.say(this.target, `${message}`);
-        console.log(message);
+        this.messages.push(message);
+    }
+
+    sayQueue() {
+        setInterval(() => {
+            if (this.messages.length) {
+                //this.client.say(this.target, '/me '+this.messages.shift());
+                console.log(this.messages.shift(), Date.now());
+            }
+        }, 1500);
     }
 }
