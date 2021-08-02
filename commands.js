@@ -226,7 +226,7 @@ module.exports = function (client) {
         },
         {
             signature: '!RPG',
-            exclusive: true,
+            exclusive: false,
             execute(text, target, context) {
                 adventure.haveAnAdventure(client, target, text, context);
             }

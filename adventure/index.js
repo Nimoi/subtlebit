@@ -7,6 +7,7 @@ const {Color} = require('./colors.js');
 const {Enemy} = require('./enemies.js');
 const {getRandomInt} = require('./random.js');
 const markov = require('../markov.js');
+const {Trap} = require('./trap.js');
 
 /**
  * Adventure Game
@@ -122,8 +123,23 @@ class Adventure
         if (command) {
             return this[command]();
         }
+        this.randomEvent();
+    }
+
+    randomEvent() {
         this.say(this.adventureStartMessage());
+        if (Math.random() < 0.25) {
+            return this.trap();
+        }
         return this.fight();
+    }
+
+    trap() {
+        let trap = (new Trap).random();
+        this.player['health'] -= trap['damage'];
+        this.records.savePlayer(this.player);
+        this.say('You '+trap.verb+' '+trap.name+'!');
+        this.say('You lost ☠️'+trap.damage+' HP.');
     }
 
     adventureStartMessage() {
