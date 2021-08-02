@@ -26,6 +26,12 @@ var saySomething = exports.saySomething = (client, target, string = false) => {
     client.say(target, text.process());
 }
 
+exports.randomSentence = () => {
+    let end = random(3,20);
+    let text = quotes.start(useUpperCase).end(end)
+    return text.process();
+}
+
 var useUpperCase = function(wordList) {
     var tmpList = Object.keys(wordList).filter(function(word) {
         return word[0] >= 'A' && word[0] <= 'Z'

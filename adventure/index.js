@@ -6,6 +6,7 @@ const {getRandomWord, generateItemBySlot, generateItemRandom} = require('./item.
 const {Color} = require('./colors.js');
 const {Enemy} = require('./enemies.js');
 const {getRandomInt} = require('./random.js');
+const markov = require('../markov.js');
 
 /**
  * Adventure Game
@@ -256,6 +257,7 @@ class Adventure
         let response = enemy['name']+' the '+enemy['type'];
         response += ' (⚔️'+enemy['stats']['attack']+', 🛡️'+enemy['stats']['defense']+')';
         response += ' attacks!';
+        response += ' It shouts at you, "'+markov.randomSentence()+'"!';
         this.say(response + this.damagePlayer(enemy));
         let experience = 0;
         if (this.player['health'] <= 0) {
@@ -401,8 +403,8 @@ class Adventure
     sayQueue() {
         setInterval(() => {
             if (this.messages.length) {
-                //this.client.say(this.target, '/me '+this.messages.shift());
-                console.log(this.messages.shift(), Date.now());
+                this.client.say(this.target, '/me '+this.messages.shift());
+                //console.log(this.messages.shift(), Date.now());
             }
         }, 1500);
     }
