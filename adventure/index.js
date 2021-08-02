@@ -8,6 +8,7 @@ const {Enemy} = require('./enemies.js');
 const {getRandomInt} = require('./random.js');
 const markov = require('../markov.js');
 const {Trap} = require('./trap.js');
+const {Boon} = require('./boon.js');
 
 /**
  * Adventure Game
@@ -128,18 +129,30 @@ class Adventure
 
     randomEvent() {
         this.say(this.adventureStartMessage());
-        if (Math.random() < 0.25) {
+        let random = Math.random();
+        if (random < 0.25) {
             return this.trap();
+        }
+        if (random < 0.5) {
+            return this.boon();
         }
         return this.fight();
     }
 
     trap() {
         let trap = (new Trap).random();
-        this.player['health'] -= trap['damage'];
+        this.player['health'] -= trap.damage;
         this.records.savePlayer(this.player);
         this.say('You '+trap.verb+' '+trap.name+'!');
         this.say('You lost ☠️'+trap.damage+' HP.');
+    }
+
+    boon() {
+        let boon = (new Boon).random();
+        this.player['health'] += boon.health;
+        this.records.savePlayer(this.player);
+        this.say('You '+boon.verb+' '+boon.name+'!');
+        this.say('You gained ❤️'+boon.damage+' HP.');
     }
 
     adventureStartMessage() {
