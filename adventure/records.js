@@ -4,14 +4,12 @@ class Records
 {
     constructor(user)
     {
-        console.log('construct records!');
         this.user = user;
     }
 
     async initialize() {
         return new Promise(resolve => {
             fs.readdir(__dirname+'/records', (err, files) => {
-                console.log(files);
                 if (files.indexOf(this.user) === -1) {
                     return resolve(this.addPlayer());
                 }
@@ -21,7 +19,6 @@ class Records
     }
 
     getPlayerRecord() {
-        console.log('player record', this.player);
         return this.player;
     }
 

@@ -10,51 +10,6 @@ const {getRandomInt} = require('./random.js');
 /**
  * Adventure Game
  *
- * Porting over advnture game from ankh. It was a lot of PHP, but this will be different anyway so I am not worried about an identical rewrite.o
- *
- * Key Concepts:
- *
- * - Generate random items and enemies with random names.
- *   - Point values based on the names
- *   - Names pull words from stream dictionary
- *
- * - Generate stream dictionary
- *   - Read message log and find unique words
- *
- * - !adventure
- *   - Go on an adventure
- *   - Battle - "An x has appeared before you. It attacks!"
- *   - Negotiate - "The x have lost 50 y in a flood. Will you offer them z to maintain relations?"
- *   - Encounter - "You approach a suspicious x camping near your path. What do you do?"
- *   
- *   I think basically I generate random situations.
- *   Each one favors a different resolution like attack, negotiate, deceive, or whatever. 
- *   You choose a move and roll on it - if your roll matches the situations expectation for that type of action then you win.
- *
- *   Stats / Actions:
- *
- *   - Constitution : Health
- *   - Strength : Attack: Engage in a battle.
- *   - Persuasion : Negotiate: Argue in your favor.
- *   - Dexterity : Sneak: Stealth your way out of trouble.
- *   - Wisdom : Wits: Think your way out of the problem.
- *   - Haste : Attack speed interval multiplier
- *
- *   "Nimoi ran into Leroy the Hungry Giant (999) but managed to sneak past with 20 tokens!"
- *   "Nimoi was ambushed by The Gang of Gunt but managed to negotiate their freedom and a bonus 5 tokens!"
- *   "Nimoi traveled to the Land of Ranch and encountered Richard the Bossman. They battled and Nimoi was victorious! They found a Flask of Laker Red and decided to take it."
- *
- *   Enemy Stat:
- *
- *   {
- *      Cons: 10
- *      Str: 15
- *      Pers: 8
- *      Dex: 120
- *   }
- *
- *   Player chooses "Sneak", rolls D20 + their Dexterity stat. If it is less than 120, they fail.
- *
  *   If a player chooses to Battle, the battle minigame starts:
  *
  *   - Every 5 seconds (multiplied by players haste) the player will swing at the enemy. The enemy will also attack on their own timer.
@@ -67,15 +22,7 @@ const {getRandomInt} = require('./random.js');
  *   - Trade stuff with other players
  *   - Discover PETS!? (Maybe it should just be a pets game)
  *   - Collect resources to craft helpful stuff
- *   - RAID bosses that players team up to fight
- *   - DEATH: Perma or not? Maybe only if you want to be hardcore
- *
  */
-
-//$req_dump = print_r($_REQUEST, TRUE);
-//$fp = fopen('request.log', 'a');
-//fwrite($fp, $req_dump);
-//fclose($fp);
 
 /**
  * ADVENTURE
@@ -88,13 +35,7 @@ const {getRandomInt} = require('./random.js');
  * Encourage players to wait a few minutes to prevent spamming the command, fatique or something
  *     Maybe you only have so many adventures and they recharge over time
  * Add a bank command to store the most valuable items (unlocked at level)
- * Items with special abilities (like comes back to you when you die, or unlocks special silly commands)
- * "Talking" Swords. Chance if the weapon is type sword to be a "Talking" sword that says a markov line
  */
-
-//$user = isset($_GET['user']) ? $_GET['user'] : null;
-//$tokens = isset($_GET['tokens']) ? intval($_GET['tokens']) : null;
-//$input = isset($_GET['input']) ? $_GET['input'] : null;
 
 exports.haveAnAdventure = async (client, target, text, context) => {
     let adventure = new Adventure(client, target, text, context);
@@ -134,7 +75,7 @@ class Adventure
 
         this.user = context.username;
         this.input = text;
-        //this.userTokens = tokens;
+        this.queue = [];
         console.log(
             text,
             context
@@ -143,17 +84,19 @@ class Adventure
 
     async initialize() {
         this.records = new Records(this.user);
-        this.player = await this.records.initialize();
+        this.record = await this.records.initialize();
+        this.player = typeof this.record === 'string'
+            ? JSON.parse(this.record)
+            : this.record;
         console.log(
-            this.records,
-            this.player
+            this.player,
+            typeof this.player
         );
         this.setupPlayer();
         this.begin();
     }
 
     setupPlayer() {
-        console.log('player', this.player);
         if (! this.player) {
             return setTimeout(() => {
                 this.setupPlayer();
@@ -184,19 +127,6 @@ class Adventure
             return this[command]();
         }
         return this.fight(this.adventureStartMessage());
-    }
-
-    addPoints(
-        points, 
-        message = 'You earned $value tokens',
-        fail = 'You slipped and lost your tokens.'
-    ) {
-        message += ' ($newbalance($user)).';
-        return ' $addpoints("$user","'+points+'","'+points+'","'+message+'","'+fail+'") ';
-    }
-
-    removePoints() {
-        //return ' $removepoints("$user","'+betDifference+'","'+betDifference+'","You died and lost $value tokens","","false") ';
     }
 
     adventureStartMessage() {
@@ -337,10 +267,6 @@ class Adventure
         response += ' attacks!';
         let experience = 0;
         response += this.damagePlayer(enemy);
-        if (enemy['gear']['bomb']) {
-            let lost = 50;
-            response += ' The enemy dropped a bomb! You lost '+lost+' tokens. $removepoints("$user","'+lost+'","'+lost+'","","","false") ';
-        }
         if (this.player['health'] <= 0) {
             response += ' '+this.user+' has died!';
             this.say(response);
@@ -370,7 +296,7 @@ class Adventure
             experience = enemy['stats']['attack'];
             response += ' It tore you up but you managed to escape.';
         }
-        this.player['experience'] = (experience + this.player['experience']).toFixed(2);
+        this.player['experience'] = (parseFloat(experience) + parseFloat(this.player['experience'])).toFixed(2);
         this.records.savePlayer(this.player);
         response += '. You earned '+experience+'XP.';
         this.say(response);
@@ -420,7 +346,6 @@ class Adventure
             head: getRandomInt(0,5) === 5 ? null : generateItemBySlot('head'),
             weapon: getRandomInt(0,5) === 5 ? null : generateItemBySlot('weapon'),
             potion: getRandomInt(0,5) === 5 ? null : generateItemBySlot('potion'),
-            bomb: getRandomInt(0,3) === 3
         };
         // attack - strlen(name)
         // defense - attack * [.25, .5, .75, 1, 1.25, 1.5, 1.75]
@@ -470,19 +395,6 @@ class Adventure
     }
     */
 
-    test() {
-        let response = '';
-        for(let i=0; i < 3; i++) {
-            let item = generateItemRandom();
-            response += this.getItemName(item['item']) + ' ';
-        }
-        console.log(response);
-
-        console.log(this.player);
-
-        console.log(getRandomWord());
-    }
-
     help() {
         this.say('/me Go on an adventure here in this chat. Earn some XP. Find some loot. Get dead maybe too? Try !adventure commands');
     }
@@ -492,9 +404,7 @@ class Adventure
     }
 
     say(message) {
-        //this.client.say(this.target, `${message}`);
+        ///this.client.say(this.target, `${message}`);
         console.log(message);
     }
 }
-
-//echo haveAnAdventure(user, tokens, input);

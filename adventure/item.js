@@ -4,7 +4,8 @@ const fs = require('fs');
 var getRandomWord = exports.getRandomWord = () => {
     const file = fs.readFileSync(__dirname+'/dictionary.txt', 'utf-8');
     const lines = file.split('\n');
-    return lines[Math.floor(Math.random() * lines.length)];
+    const line = lines[Math.floor(Math.random() * lines.length)];
+    return capitalizeFirstLetter(line);
 }
 
 var getGearSlots = exports.getGearSlots = () => {
