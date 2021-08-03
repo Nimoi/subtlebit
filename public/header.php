@@ -4,15 +4,10 @@
     <head>
         <meta charset="utf-8">
 
-        <title>Subtlebit</title>
+        <title>Subtlebit<?php echo (isset($pageTitle) ? ' - '.$pageTitle : '') ?></title>
         <meta name="description" content="Subtlebit is a bot for Twitch">
         <meta name="author" content="nimoi">
+        <link rel="stylesheet" href="layout.css">
     </head>
 
     <body>
-        <img src="/subtlebit.png">
-        <p>
-        <a href="https://github.com/Nimoi/subtlebit">https://github.com/Nimoi/subtlebit</a>
-        </p>
-    </body>
-</html>

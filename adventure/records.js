@@ -55,7 +55,7 @@ class Records
     }
 
     savePlayer(player) {
-        this.write(this.getUserFilePath(), JSON.stringify(player));
+        this.write(this.getUserFilePath(), player);
     }
 
     write(path, text) {
