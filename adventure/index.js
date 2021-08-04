@@ -31,6 +31,8 @@ const {Boon} = require('./boon.js');
  * Encourage players to wait a few minutes to prevent spamming the command, fatique or something
  *     Maybe you only have so many adventures and they recharge over time
  * Add a bank command to store the most valuable items (unlocked at level)
+ *
+ * Translate some of the text to cutscenes
  */
 
 exports.haveAnAdventure = async (client, target, text, context) => {

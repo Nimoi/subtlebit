@@ -19,32 +19,47 @@ const init = () => {
 const listProfiles = (data) => {
     for (let user in data) {
         let record = data[user];
-        console.log(record);
         var profile = document.createElement("div");
         profile.className = "profile";
-        let health = record.health ? record.health : 'n/a';
-        let level = record.level ? record.level : 'n/a';
-        let experience = record.experience ? record.experience : 'n/a';
+
+        let health = record.health ? record.health : 'n/a',
+            level = record.level ? record.level : 'n/a',
+            experience = record.experience ? record.experience : 'n/a',
+            currency = record.currency ? record.currency : 'n/a';
+
         let html = `
             <div className="user-stats">
                 <h3 class='user-name'>${user}</h3>
-                <ul>
-                    <li><strong>Health:</strong> ${health}</li>
-                    <li><strong>Level:</strong> ${level}</li>
-                    <li><strong>Experience:</strong> ${experience}</li>
-                </ul>
+                <table>
+                    <tr>
+                        <th>Health:</th>
+                        <td>${health}</td>
+                    </tr>
+                    <tr>
+                        <th>Level:</th>
+                        <td>${level}</td>
+                    </tr>
+                    <tr>
+                        <th>Experience:</th>
+                        <td>${experience}</td>
+                    </tr>
+                    <tr>
+                        <th>Currency:</th>
+                        <td>${currency}</td>
+                    </tr>
+                </table>
             </div>
-            <div className="user-gear">
+            <div class="user-gear">
                 <h4>Gear</h4>
                 <ul>
         `;
         let gearItems = ``;
-        for (let item in record.gear) {
-            let details = record.gear[item];
-            if (! details) {
+        for (let slot in record.gear) {
+            let item = record.gear[slot];
+            if (! item) {
                 continue;
             }
-            gearItems += `<li>${details.name}</li>`;
+            gearItems += `<li><strong>${slot}</strong> ${item.name}</li>`;
         }
         html += gearItems.length === 0 
             ? `<li>Player has no gear.</li>` 

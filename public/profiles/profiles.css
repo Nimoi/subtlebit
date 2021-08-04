@@ -8,15 +8,28 @@
 .profile {
     margin: 10px 0;
     padding: 20px;
-    background: #ddd;
+    background: linear-gradient(#d1e3ff, #efefef);
     width: calc(32% - 30px);
+    box-shadow: 1px 1px 0 rgba(0,0,0,0.25);
 }
 
 .user-name {
+    margin-top: 0;
+    text-transform: capitalize;
+    font-size: 1.4em;
 }
 
 .user-stats {
 }
 
-.user-gear {
+.user-gear h4 {
+    font-size: 1.2em;
+}
+
+.user-gear strong {
+    text-transform: capitalize;
+}
+
+.user-gear table {
+    text-align: left;
 }

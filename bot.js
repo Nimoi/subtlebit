@@ -18,6 +18,9 @@ const moment = require('moment');
 const messages = require('./messages.js');
 const animals = require('./animals.js');
 const markov = require('./markov.js');
+const sockets = require('./sockets.js');
+
+sockets.start();
 
 const opts = {
   identity: {
@@ -64,13 +67,16 @@ function onConnected (addr, port) {
 //markov.startBlabbin(client);
 
 function onMessage (target, context, msg, self) {
+    const message = msg.trim();
+
     if (self) {
         // Ignore messages from the bot
         printMessage(chalk.green(`$ ${printUsername(context)} message: ${msg}`));
         return;
     }
 
-    const message = msg.trim();
+    sockets.io.emit('chat', {context: context, message: message});
+
     let logData = {
         target: target,
         context: context,
