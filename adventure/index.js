@@ -189,7 +189,7 @@ class Adventure
     }
 
     sell() {
-        let params = this.input.substr('sell'.length).trim();
+        let params = this.input.trim().substr('sell'.length).trim();
         if (! params) {
             this.say('Sell your items with !adventure sell [ITEM]');
             return;
@@ -212,21 +212,30 @@ class Adventure
             item = this.player['gear'][isPotionSlot];
         } else {
             // Check if item is named
-            item = this.player['gear'].find((item) => {
+            let itemSlot = Object.keys(this.player.gear).find((slot) => {
+                let item = this.player.gear[slot];
+                if (item === null) {
+                    return false;
+                }
                 return item['name'].toLowerCase() == params.toLowerCase();
             });
+            if (itemSlot) {
+                item = this.player.gear[itemSlot];
+            }
         }
-        if (item === null) {
+        if (item === null || item === undefined) {
             this.say('You don\'t appear to have any '+params+'.');
             return;
         }
         this.player['sold'] = item;
         this.player['gear'][item['slot']] = null;
+        if (! this.player.currency) {
+            this.player.currency = 0;
+        }
+        let price = item.stat * 10;
+        this.player.currency += price;
         this.records.savePlayer(this.player);
-        return this.addPoints(
-            item['stat'] * 10,
-            this.user+' sold their '+item['name']+' for $value tokens.'
-        );
+        this.say(this.user+' sold their '+item.name+' for $'+price+'.');
     }
 
     compareNewGear(slot, item) {
@@ -236,21 +245,26 @@ class Adventure
     }
 
     inventory() {
-        let hasGear = this.player['gear'].filter((gear) => {
-            return gear !== null;
+        let hasGear = Object.keys(this.player.gear).filter((slot) => {
+            return this.player.gear[slot] !== null;
         }).length > 0;
         if (! hasGear) {
             this.say(this.user + ' has no gear. Try having some !adventure');
             return;
         }
 
-        let itemValues = this.player['gear'].filter((item) => {
-            return item !== null;
+        let itemValues = Object.keys(this.player.gear).filter((slot) => {
+            return this.player.gear[slot] !== null;
+        }).map((slot) => {
+            let item = this.player.gear[slot];
+            item.value = item.stat * 10;
+            return this.getItemName(item) + ' $'+item.value;
+        });
         // TODO: fix
         //})->sortByDesc('slot')->map(function (item) {
             //item['value'] = item['stat'] * 10;
             //return this.getItemName(item) . ' $'.item['value'];
-        });
+        //});
 
         let message = this.user + '\'s inventory: ';
         message += itemValues.join(', ');
