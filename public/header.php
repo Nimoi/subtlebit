@@ -7,7 +7,7 @@
         <title>Subtlebit<?php echo (isset($pageTitle) ? ' - '.$pageTitle : '') ?></title>
         <meta name="description" content="Subtlebit is a bot for Twitch">
         <meta name="author" content="nimoi">
-        <link rel="stylesheet" href="layout.css">
+        <link rel="stylesheet" href="/layout.css">
     </head>
 
     <body>

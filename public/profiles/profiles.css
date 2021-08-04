@@ -1,7 +1,22 @@
+.profiles {
+  display: flex;
+  justify-content: space-between;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+
 .profile {
     margin: 10px 0;
     padding: 20px;
     background: #ddd;
-    flex-direction: row;
-    display: flex;
+    width: calc(32% - 30px);
+}
+
+.user-name {
+}
+
+.user-stats {
+}
+
+.user-gear {
 }

@@ -8,6 +8,8 @@
     <main class="container">
         <div class="panel">
             <h2>Profiles</h2>
+            <div class="profiles">
+            </div>
         </div>
     </main>
 

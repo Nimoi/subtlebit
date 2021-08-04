@@ -22,27 +22,37 @@ const listProfiles = (data) => {
         console.log(record);
         var profile = document.createElement("div");
         profile.className = "profile";
+        let health = record.health ? record.health : 'n/a';
+        let level = record.level ? record.level : 'n/a';
+        let experience = record.experience ? record.experience : 'n/a';
         let html = `
-            <h3>${user}</h3>
-            <ul>
-                <li><strong>Health:</strong> ${record.health}</li>
-                <li><strong>Level:</strong> ${record.level}</li>
-                <li><strong>Level:</strong> ${record.level}</li>
-                <li><strong>Experience:</strong> ${record.experience}</li>
-            </ul>
-            <h4>Gear</h4>
-            <ul>
+            <div className="user-stats">
+                <h3 class='user-name'>${user}</h3>
+                <ul>
+                    <li><strong>Health:</strong> ${health}</li>
+                    <li><strong>Level:</strong> ${level}</li>
+                    <li><strong>Experience:</strong> ${experience}</li>
+                </ul>
+            </div>
+            <div className="user-gear">
+                <h4>Gear</h4>
+                <ul>
         `;
+        let gearItems = ``;
         for (let item in record.gear) {
             let details = record.gear[item];
             if (! details) {
                 continue;
             }
-            html += `<li>${details.name}</li>`;
+            gearItems += `<li>${details.name}</li>`;
         }
-        html += `</ul>`;
+        html += gearItems.length === 0 
+            ? `<li>Player has no gear.</li>` 
+            : gearItems;
+        html += `</ul>
+            </div>`;
         profile.innerHTML = html;
-        document.querySelector('main.container .panel').appendChild(profile);
+        document.querySelector('main.container .panel .profiles').appendChild(profile);
     }
 };
 
