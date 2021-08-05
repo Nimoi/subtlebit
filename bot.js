@@ -19,6 +19,8 @@ const messages = require('./messages.js');
 const animals = require('./animals.js');
 const markov = require('./markov.js');
 const sockets = require('./sockets.js');
+const axios = require('axios');
+const fs = require('fs');
 
 sockets.start();
 
@@ -42,6 +44,8 @@ client.on('disconnected', onDisconnected);
 client.connect();
 
 const commands = setupCommands(client);
+
+var users = {};
 
 function onDisconnected (message) {
     printMessage(chalk.red(`* Disconnected: ${message}`));
@@ -75,7 +79,15 @@ function onMessage (target, context, msg, self) {
         return;
     }
 
-    sockets.io.emit('chat', {context: context, message: message});
+    if (! (context.username in users)) {
+        getUserData(context);
+    }
+
+    sockets.io.emit('chat', {
+        context: context, 
+        message: message, 
+        data: users[context.username]
+    });
 
     let logData = {
         target: target,
@@ -111,6 +123,46 @@ function onMessage (target, context, msg, self) {
 
     command.execute(text, target, context);
     printMessage(chalk.magenta(`$ ${printUsername(context)} executed ${signature}.`));
+}
+
+function getUserData(context) {
+    axios.get(`https://api.twitch.tv/helix/users?login=${context.username}`, {
+        headers: {
+            'Authorization': `Bearer ${config.token}`,
+            'Client-ID': config.client_id
+        }
+    }).then((response) => {
+        if (! response.hasOwnProperty('data')) {
+            console.log(response);
+            return;
+        }
+        if (! response.data.hasOwnProperty('data')) {
+            console.log(response.data);
+            return;
+        }
+        const data = response.data.data.shift();
+        users[context.username] = data;
+        checkUserCache(data);
+    });
+}
+
+function checkUserCache(data) {
+    // Check if user image cached
+    fs.readdir(__dirname+'/public/cache', (err, files) => {
+        if (files.indexOf(data.login+'.jpg') === -1) {
+            return cacheUserImage(data);
+        }
+    });
+}
+
+function cacheUserImage(data) {
+    axios({
+        method: "get",
+        url: data.profile_image_url,
+        responseType: "stream"
+    }).then(function (response) {
+        response.data.pipe(fs.createWriteStream(__dirname+'/public/cache/'+data.login+'.jpg'));
+    });
 }
 
 function printEmotes(emotes) {

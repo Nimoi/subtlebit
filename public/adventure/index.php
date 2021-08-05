@@ -7,33 +7,12 @@
 
     <main class="container">
         <div class="panel">
-            <canvas></canvas>
+            <canvas id="canvas"></canvas>
         </div>
     </main>
 
-    <script src="/adventure/adventure.js"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
     <script src="/socket.io/socket.io.js"></script>
-    <script>
-        var socket = io();
-
-        socket.on("connect", () => {
-            console.log(socket.id);
-            document.write('Connected to chat');
-        });
-
-        socket.on("chat", (chat) => {
-            console.log(chat);
-            printChat(chat);
-        });
-
-        function printChat(chat) {
-            
-            let html = `<p>
-                <strong style="color:${chat.context.color}">${chat.context['display-name']}</strong>
-                ${chat.message}
-            </p>`;
-            document.write(html);
-        }
-    </script>
+    <script src="/adventure/adventure.js" type="module"></script>
 
 <?php include '../footer.php'; ?>
