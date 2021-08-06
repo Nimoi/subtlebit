@@ -103,7 +103,10 @@ class Adventure
             trap: (new Trap).random(),
             enemy: this.getRandomEnemy(),
             sentence: markov.randomSentence(),
-            place: (new Place).random()
+            place: {
+                type: (new Place).random(),
+                name: getRandomWord()
+            }
         });
     }
 

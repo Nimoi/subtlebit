@@ -1,6 +1,23 @@
 import {addToDom} from './dom.js';
-import {drawBackground, trees, clouds} from './scene.js';
+import {
+    drawBackground,
+    trees,
+    clouds,
+    titleScene,
+    travelScene,
+    placeScene
+} from './scene.js';
 import {getRandomInt} from './random.js';
+
+/*
+ * TODOs:
+ *  - A queue so animations run at the same time
+ *  - Title screen "X is going on an adventure!"
+ *  - New scene after player travels to "place"
+ *      - Player at "place", runs into "enemy"
+ *  - Scene where player fights enemy
+ *  - Victory / death scene
+ */
 
 var socket = io();
 
@@ -58,9 +75,6 @@ function render() {
 
 resizeCanvas();
 
-var adventure;
-var logo;
-
 function onAdventure(data) {
     new Adventure(data);
 }
@@ -68,25 +82,20 @@ function onAdventure(data) {
 class Adventure {
     constructor(data) {
         this.data = data;
-        this.player = {
-            x: 10,
-            y: 100,
-            width: 80,
-            height: 80
-        };
         console.log(data);
-        clouds.init();
-        trees.init();
+        //clouds.init();
         this.logo = new Image();
-        this.logo.addEventListener('load', () => {
-            ctx.drawImage(this.logo, 0, 0, 50, 50);
-        }, false);
+        //this.logo.addEventListener('load', () => {
+            //ctx.drawImage(this.logo, 0, 0, 50, 50);
+        //}, false);
         this.logo.src = `/cache/${this.data.username}.jpg`;
 
         this.fps = 30;
         this.fpsInterval = 1000 / this.fps;
         this.then = Date.now();
         this.startTime = this.then;
+
+        this.scene = new travelScene(canvas, ctx, data, this.logo);
 
         window.requestAnimationFrame(() => {
             this.frame();
@@ -99,54 +108,16 @@ class Adventure {
 
         if (elapsed > this.fpsInterval) {
             this.then = now - (elapsed % this.fpsInterval);
-            this.draw();
+            this.scene.process();
+            this.scene.draw();
+            if (this.scene.finished) {
+                this.scene = this.scene.nextScene();
+            }
         }
 
         window.requestAnimationFrame(() => {
             this.frame();
         });
-    }
-
-    draw() {
-        this.resetMap();
-        drawBackground(ctx);
-        trees.draw(ctx);
-        clouds.draw(ctx);
-        this.drawPlayer();
-        this.drawPlace();
-        this.drawEnemy();
-    }
-
-    resetMap() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-    }
-
-    drawPlayer() {
-        // Logo
-        ctx.drawImage(
-            this.logo, 
-            this.player.x, 
-            this.player.y, 
-            this.player.width, 
-            this.player.height
-        );
-
-        // Name
-        ctx.font = '14px serif';
-        ctx.fillStyle = this.data.context.color;
-        ctx.fillText(
-            this.data.context['display-name'],
-            this.player.x,
-            this.player.y+10+this.player.height
-        );
-    }
-
-    drawPlace() {
-        ctx.fillStyle = "#aaa";
-        ctx.fillRect(canvas.width - 100, 100, 200, 100);
-
-        ctx.fillStyle = "#333";
-        ctx.fillText(this.data.place, canvas.width - 80, 150, 200);
     }
 
     drawEnemy() {
