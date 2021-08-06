@@ -11,7 +11,6 @@ import {getRandomInt} from './random.js';
 
 /*
  * TODOs:
- *  - A queue so animations run at the same time
  *  - Title screen "X is going on an adventure!"
  *  - New scene after player travels to "place"
  *      - Player at "place", runs into "enemy"
@@ -47,10 +46,6 @@ function printChat(chat) {
 }
 */
 
-socket.on('adventure', (adventure) => {
-    onAdventure(adventure);
-});
-
 /*
  * Canvas
  */
@@ -67,21 +62,19 @@ function resizeCanvas() {
 function render() {
     ctx.fillStyle = 'rgb(200, 0, 0)';
     ctx.fillRect(10, 10, 50, 50);
-    ctx.fillStyle = 'rgba(0, 0, 200, 0.5)';
+    ctx.fillStyle = 'rgba(0, 100, 200, 0.5)';
     ctx.fillRect(30, 30, 50, 50);
     ctx.font = '32px serif';
+    ctx.fillStyle = 'rgba(50, 150, 220, 0.5)';
     ctx.fillText('Have an Adventure!', 100, 60);
 }
 
 resizeCanvas();
 
-function onAdventure(data) {
-    new Adventure(data);
-}
-
 class Adventure {
-    constructor(data) {
+    constructor(data, callback) {
         this.data = data;
+        this.callback = callback;
         console.log(data);
         //clouds.init();
         this.logo = new Image();
@@ -95,7 +88,7 @@ class Adventure {
         this.then = Date.now();
         this.startTime = this.then;
 
-        this.scene = new travelScene(canvas, ctx, data, this.logo);
+        this.scene = new titleScene(canvas, ctx, data, this.logo);
 
         window.requestAnimationFrame(() => {
             this.frame();
@@ -113,6 +106,10 @@ class Adventure {
             if (this.scene.finished) {
                 this.scene = this.scene.nextScene();
             }
+            // I guess just clear out the scene when we're done
+            if (this.scene === false) {
+                return this.callback();
+            }
         }
 
         window.requestAnimationFrame(() => {
@@ -127,3 +124,32 @@ class Adventure {
         ctx.fillText(this.data.sentence, 160, 100, canvas.width - 360);
     }
 }
+
+/*
+ * Queue
+ */
+
+var queue = {
+    list: [],
+    process: function () {
+        if (this.list.length === 0) {
+            return setTimeout(() => {
+                this.process();
+            }, 1000);
+        }
+
+        new Adventure(this.list.shift(), () => {
+            this.process();
+        });
+    }
+};
+
+queue.process();
+
+/*
+ * On !RPG
+ */
+socket.on('adventure', (adventure) => {
+    queue.list.push(adventure);
+});
+

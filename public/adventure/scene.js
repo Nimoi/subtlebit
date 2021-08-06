@@ -1,8 +1,11 @@
 class Scene {
-    constructor(canvas, ctx) {
+    constructor(canvas, ctx, data, logo) {
         this.canvas = canvas;
         this.ctx = ctx;
+        this.data = data;
+        this.logo = logo;
         this.finished = 0;
+        this.baseline = canvas.height - 40;
     }
 
     resetMap() {
@@ -11,13 +14,68 @@ class Scene {
 };
 
 export class titleScene extends Scene {
+    constructor(canvas, ctx, data, logo) {
+        super(canvas, ctx, data, logo);
+        this.startFrames = 30*4;
+        this.frames = this.startFrames;
+    }
+
+    process() {
+        this.frames--;
+        if (this.frames === 0) {
+            this.finished = 1;
+        }
+    }
+
+    draw() {
+        this.resetMap();
+        this.drawLogo();
+        if (100 / this.frames > 1) {
+            this.drawName();
+        }
+        if (80 / this.frames > 1) {
+            this.drawTitle();
+        }
+    }
+
+    drawName() {
+        this.ctx.font = '20px serif';
+        this.ctx.fillStyle = this.data.context.color;
+        this.ctx.fillText(
+            this.data.context['display-name'],
+            (this.canvas.width * 0.5) - 10,
+            this.baseline - 10
+        );
+    }
+
+    drawTitle() {
+        this.ctx.font = '20px serif';
+        this.ctx.fillStyle = `rgba(240,245,250,0.5)`;
+        this.ctx.fillText(
+            'goes on an adventure!',
+            (this.canvas.width * 0.5) - 10,
+            this.baseline + 10
+        );
+    }
+
+    drawLogo() {
+        this.ctx.drawImage(
+            this.logo, 
+            (this.canvas.width * 0.5) - 120,
+            this.baseline - 60, //+ 100 + (this.canvas.height - this.baseline),
+            100, 
+            100
+        );
+    }
+
+    nextScene() {
+        return new travelScene(this.canvas, this.ctx, this.data, this.logo);
+    }
 };
 
 export class travelScene extends Scene {
     constructor(canvas, ctx, data, logo) {
-        super(canvas, ctx);
-        this.data = data;
-        this.logo = logo;
+        super(canvas, ctx, data, logo);
         this.player = {
             x: 10,
             y: canvas.height - 80,
@@ -96,6 +154,7 @@ export class travelScene extends Scene {
 
 export class placeScene extends Scene {
     process() {
+        this.finished = 1;
     }
     draw() {
         this.resetMap();
@@ -103,6 +162,9 @@ export class placeScene extends Scene {
         this.ctx.fillRect(10, 10, 50, 50);
         this.ctx.fillStyle = 'rgba(0, 0, 200, 0.5)';
         this.ctx.fillRect(30, 30, 50, 50);
+    }
+    nextScene() {
+        return false;
     }
 };
 
