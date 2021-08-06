@@ -227,8 +227,8 @@ module.exports = function (client) {
         {
             signature: '!RPG',
             exclusive: false,
-            execute(text, target, context) {
-                adventure.haveAnAdventure(client, target, text, context);
+            execute(text, target, context, sockets) {
+                adventure.haveAnAdventure(client, target, text, context, sockets);
             }
         },
         // const { b1ff, censor, chef, cockney, eleet, fudd, jethro, pirate, jibberish, ken, kenny, klaus, ky00te, LOLCAT, nethackify, newspeak, nyc, rasterman, scottish, scramble, spammer, studly, upsidedown } = require('talk-like-a');

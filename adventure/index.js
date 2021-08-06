@@ -35,18 +35,19 @@ const {Boon} = require('./boon.js');
  * Translate some of the text to cutscenes
  */
 
-exports.haveAnAdventure = async (client, target, text, context) => {
-    let adventure = new Adventure(client, target, text, context);
+exports.haveAnAdventure = async (client, target, text, context, sockets) => {
+    let adventure = new Adventure(client, target, text, context, sockets);
     await adventure.initialize();
 }
 
 class Adventure
 {
-    constructor(client, target, text, context) {
+    constructor(client, target, text, context, sockets) {
         this.client = client;
         this.target = target;
         this.text = text;
         this.context = context;
+        this.sockets = sockets;
 
         this.user;
         this.userTokens;
@@ -92,7 +93,18 @@ class Adventure
             typeof this.player
         );
         this.setupPlayer();
-        this.begin();
+        //this.begin();
+
+        this.sockets.io.emit('adventure', {
+            username: this.user,
+            context: this.context,
+            record: this.player,
+            boon: (new Boon).random(),
+            trap: (new Trap).random(),
+            enemy: this.getRandomEnemy(),
+            sentence: markov.randomSentence(),
+            place: (new Place).random()
+        });
     }
 
     setupPlayer() {
@@ -154,7 +166,7 @@ class Adventure
         this.player['health'] += boon.health;
         this.records.savePlayer(this.player);
         this.say('You '+boon.verb+' '+boon.name+'!');
-        this.say('You gained ❤️'+boon.damage+' HP.');
+        this.say('You gained ❤️'+boon.health+' HP.');
     }
 
     adventureStartMessage() {
@@ -317,7 +329,7 @@ class Adventure
             experience = enemy['stats']['defense'] * 10;
             response += ' You defeated it';
             if (! this.player['gear']['weapon']) {
-                response += ' with your '.this.getItemName(this.player['gear']['weapon']);
+                response += ' with your '+this.getItemName(this.player['gear']['weapon']);
             }
             response += '!';
             if (enemy['gear']['head']) {

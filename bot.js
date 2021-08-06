@@ -83,11 +83,13 @@ function onMessage (target, context, msg, self) {
         getUserData(context);
     }
 
+    /*
     sockets.io.emit('chat', {
         context: context, 
         message: message, 
         data: users[context.username]
     });
+    */
 
     let logData = {
         target: target,
@@ -121,7 +123,7 @@ function onMessage (target, context, msg, self) {
         return;
     }
 
-    command.execute(text, target, context);
+    command.execute(text, target, context, sockets);
     printMessage(chalk.magenta(`$ ${printUsername(context)} executed ${signature}.`));
 }
 
