@@ -10,6 +10,10 @@ import {getRandomItem} from './random.js';
  * TODOs:
  *  - Scene where player fights enemy
  *  - Victory / death scene
+ *  - More environments:
+ *      - Winter
+ *      - Spring
+ *      - Desert
  */
 
 var socket = io();

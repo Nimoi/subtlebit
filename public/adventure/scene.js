@@ -84,7 +84,6 @@ export class travelScene extends Scene {
             y: canvas.height - 80,
             width: 160, 
             height: 100,
-
         };
         this.player = new Player(ctx, {
             x: 10,
@@ -93,7 +92,8 @@ export class travelScene extends Scene {
             height: 80,
             color: data.context.color,
             name: data.context['display-name'],
-            logo: data.logo
+            logo: data.logo,
+            health: 100
         });
         this.trees = new Trees({ctx: ctx, biome: this.data.biome});
         this.rocks = new Rocks({
@@ -154,7 +154,8 @@ export class placeScene extends Scene {
             height: 80,
             color: data.context.color,
             name: data.context['display-name'],
-            logo: data.logo
+            logo: data.logo,
+            health: 100
         });
         this.enemy = new Enemy(ctx, {
             x: canvas.width - 90,
@@ -162,15 +163,22 @@ export class placeScene extends Scene {
             width: 80, 
             height: 80,
             color: getRandomColor(),
-            name: data.enemy.name
+            name: data.enemy.name,
+            health: 100
         });
         this.frames = 0;
     }
     process() {
-    this.frames++;
+        this.frames++;
         if (this.player.x < this.enemy.x - 10 - this.player.width) {
             this.player.x += 3;
             this.enemy.x -= 3;
+            return;
+        }
+        if (this.player.health && this.enemy.health) {
+            if (this.frames % 10 == 0) {
+                
+            }
             return;
         }
         this.finished = 1;
