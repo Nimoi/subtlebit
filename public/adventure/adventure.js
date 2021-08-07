@@ -1,8 +1,5 @@
 import {addToDom} from './dom.js';
 import {
-    drawBackground,
-    trees,
-    clouds,
     titleScene,
     travelScene,
     placeScene
