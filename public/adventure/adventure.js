@@ -7,44 +7,15 @@ import {
     travelScene,
     placeScene
 } from './scene.js';
-import {getRandomInt} from './random.js';
+import {getRandomItem} from './random.js';
 
 /*
  * TODOs:
- *  - Title screen "X is going on an adventure!"
- *  - New scene after player travels to "place"
- *      - Player at "place", runs into "enemy"
  *  - Scene where player fights enemy
  *  - Victory / death scene
  */
 
 var socket = io();
-
-/*
-socket.on("connect", () => {
-    addToDom('main.container .panel', 'status', 'Connected to chat');
-});
-
-socket.on("chat", (chat) => {
-    console.log(chat);
-    if ('data' in chat) {
-        var logo = new Image();
-        logo.addEventListener('load', function() {
-            ctx.drawImage(logo, 0, 0);
-        }, false);
-        logo.src = chat.data.profile_image_url
-    }
-    printChat(chat);
-});
-
-function printChat(chat) {
-    let html = `<p>
-        <strong style="color:${chat.context.color}">${chat.context['display-name']}</strong>
-        ${chat.message}
-    </p>`;
-    addToDom('main.container .panel', 'message', html);
-}
-*/
 
 /*
  * Canvas
@@ -71,24 +42,26 @@ function render() {
 
 resizeCanvas();
 
+var biomes = [
+    'summer',
+    'fall',
+];
+
 class Adventure {
     constructor(data, callback) {
+        console.log(data);
+        data.biome = getRandomItem(biomes);
+        data.logo = new Image();
+        data.logo.src = `/cache/${data.username}.jpg`;
         this.data = data;
         this.callback = callback;
-        console.log(data);
-        //clouds.init();
-        this.logo = new Image();
-        //this.logo.addEventListener('load', () => {
-            //ctx.drawImage(this.logo, 0, 0, 50, 50);
-        //}, false);
-        this.logo.src = `/cache/${this.data.username}.jpg`;
 
         this.fps = 30;
         this.fpsInterval = 1000 / this.fps;
         this.then = Date.now();
         this.startTime = this.then;
 
-        this.scene = new titleScene(canvas, ctx, data, this.logo);
+        this.scene = new titleScene(canvas, ctx, data);
 
         window.requestAnimationFrame(() => {
             this.frame();

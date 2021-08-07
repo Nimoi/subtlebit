@@ -1,9 +1,11 @@
+import {getRandomColor, getRandomItem} from './random.js';
+import {Player, Enemy} from './units.js';
+
 class Scene {
-    constructor(canvas, ctx, data, logo) {
+    constructor(canvas, ctx, data) {
         this.canvas = canvas;
         this.ctx = ctx;
         this.data = data;
-        this.logo = logo;
         this.finished = 0;
         this.baseline = canvas.height - 40;
     }
@@ -14,15 +16,15 @@ class Scene {
 };
 
 export class titleScene extends Scene {
-    constructor(canvas, ctx, data, logo) {
-        super(canvas, ctx, data, logo);
-        this.startFrames = 30*4;
-        this.frames = this.startFrames;
+    constructor(canvas, ctx, data) {
+        super(canvas, ctx, data);
+        this.maxFrames = 30*3;
+        this.frames = 0;
     }
 
     process() {
-        this.frames--;
-        if (this.frames === 0) {
+        this.frames++;
+        if (this.frames === this.maxFrames) {
             this.finished = 1;
         }
     }
@@ -30,10 +32,10 @@ export class titleScene extends Scene {
     draw() {
         this.resetMap();
         this.drawLogo();
-        if (100 / this.frames > 1) {
+        if (this.frames > 20) {
             this.drawName();
         }
-        if (80 / this.frames > 1) {
+        if (this.frames > 40) {
             this.drawTitle();
         }
     }
@@ -60,7 +62,7 @@ export class titleScene extends Scene {
 
     drawLogo() {
         this.ctx.drawImage(
-            this.logo, 
+            this.data.logo, 
             (this.canvas.width * 0.5) - 120,
             this.baseline - 60, //+ 100 + (this.canvas.height - this.baseline),
             100, 
@@ -69,31 +71,35 @@ export class titleScene extends Scene {
     }
 
     nextScene() {
-        return new travelScene(this.canvas, this.ctx, this.data, this.logo);
+        return new travelScene(this.canvas, this.ctx, this.data);
     }
 };
 
 export class travelScene extends Scene {
-    constructor(canvas, ctx, data, logo) {
-        super(canvas, ctx, data, logo);
-        this.player = {
-            x: 10,
-            y: canvas.height - 80,
-            width: 80,
-            height: 80
-        };
+    constructor(canvas, ctx, data) {
+        super(canvas, ctx, data);
         this.place = {
             x: canvas.width - 170,
             y: canvas.height - 80,
             width: 160, 
-            height: 100
+            height: 100,
+
         };
-        trees.init();
+        this.player = new Player(ctx, {
+            x: 10,
+            y: canvas.height - 80,
+            width: 80,
+            height: 80,
+            color: data.context.color,
+            name: data.context['display-name'],
+            logo: data.logo
+        });
+        trees.init(this.data.biome);
     }
 
     process() {
         if (this.player.x < this.place.x - 10 - this.player.width) {
-            this.player.x += 1;
+            this.player.x += 2;
             return;
         }
         this.finished = 1;
@@ -101,30 +107,10 @@ export class travelScene extends Scene {
 
     draw() {
         this.resetMap();
-        drawBackground(this.ctx);
+        drawBackground(this.ctx, this.data.biome);
         trees.draw(this.ctx);
-        this.drawPlayer();
+        this.player.draw();
         this.drawPlace();
-    }
-
-    drawPlayer() {
-        // Logo
-        this.ctx.drawImage(
-            this.logo, 
-            this.player.x, 
-            this.player.y, 
-            this.player.width, 
-            this.player.height
-        );
-
-        // Name
-        this.ctx.font = '14px serif';
-        this.ctx.fillStyle = this.data.context.color;
-        this.ctx.fillText(
-            this.data.context['display-name'],
-            this.player.x,
-            this.player.y+10+this.player.height
-        );
     }
 
     drawPlace() {
@@ -148,40 +134,99 @@ export class travelScene extends Scene {
     }
 
     nextScene() {
-        return new placeScene(this.canvas, this.ctx, this.data, this.logo);
+        return new placeScene(this.canvas, this.ctx, this.data);
     }
 };
 
 export class placeScene extends Scene {
+    constructor(canvas, ctx, data) {
+        super(canvas, ctx, data);
+        this.player = new Player(ctx, {
+            x: 10,
+            y: canvas.height - 80,
+            width: 80,
+            height: 80,
+            color: data.context.color,
+            name: data.context['display-name'],
+            logo: data.logo
+        });
+        this.enemy = new Enemy(ctx, {
+            x: canvas.width - 90,
+            y: canvas.height - 80,
+            width: 80, 
+            height: 80,
+            color: getRandomColor(),
+            name: data.enemy.name
+        });
+        this.frames = 0;
+    }
     process() {
+    this.frames++;
+        if (this.player.x < this.enemy.x - 10 - this.player.width) {
+            this.player.x += 3;
+            this.enemy.x -= 3;
+            return;
+        }
         this.finished = 1;
     }
     draw() {
         this.resetMap();
-        this.ctx.fillStyle = 'rgb(200, 0, 0)';
-        this.ctx.fillRect(10, 10, 50, 50);
-        this.ctx.fillStyle = 'rgba(0, 0, 200, 0.5)';
-        this.ctx.fillRect(30, 30, 50, 50);
+        drawBackground(this.ctx, this.data.biome);
+        this.player.draw();
+        this.enemy.draw();
+
+        // Sentence
+        if (this.frames > 30 < 30 * 5) {
+            this.ctx.font = '14px serif';
+            this.ctx.fillText(
+                this.data.sentence,
+                this.enemy.x,
+                this.enemy.y-25
+            );
+        }
     }
+
     nextScene() {
         return false;
     }
 };
 
-export function drawBackground(ctx) {
-    ctx.fillStyle = '#99ffbb';
+export function drawBackground(ctx, biome = 'summer') {
+    let colors = {
+        summer: '#4c9a00',
+        fall: '#98964D'
+    }
+    ctx.fillStyle = colors[biome];
     ctx.fillRect(0, canvas.height - 40, canvas.width, canvas.height-10);
 }
 
 export var trees = {
-    init: function () {
+    colors: {
+        summer: [
+            'rgba(31, 138, 112, 1)',
+            'rgba(26, 117, 95, 1)',
+            'rgba(36, 159, 129, 1)',
+            '#A79F0F',
+            '#8B9216',
+            '#EDA421'
+        ],
+        fall: [
+            '#8B9216',
+            '#A79F0F',
+            '#EDA421',
+            '#E98604',
+            '#DF3908',
+            '#C91E0A'
+        ],
+    },
+    init: function (biome) {
     	this.trees = [];
         for (let i=0; i<=80; i++) {
           // Get random positions for trees
           var treex = ~~(Math.random() * (canvas.width - 22));
           var treey = ~~(Math.random() * 10) + canvas.height - 60;
 
-          var colors = ['rgba(31, 138, 112, 1)','rgba(26, 117, 95, 1)','rgba(36, 159, 129, 1)'];
+          var colors = this.colors[biome];
           var color = Math.floor(Math.random()*colors.length - 1);
           let treeFill = colors[color];
 
