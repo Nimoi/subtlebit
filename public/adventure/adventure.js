@@ -75,14 +75,14 @@ class Adventure {
 
         if (elapsed > this.fpsInterval) {
             this.then = now - (elapsed % this.fpsInterval);
+            if (this.scene === false) {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                return this.callback();
+            }
             this.scene.process();
             this.scene.draw();
             if (this.scene.finished) {
                 this.scene = this.scene.nextScene();
-            }
-            // I guess just clear out the scene when we're done
-            if (this.scene === false) {
-                return this.callback();
             }
         }
 

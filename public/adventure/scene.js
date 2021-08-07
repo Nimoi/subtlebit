@@ -9,10 +9,15 @@ class Scene {
         this.data = data;
         this.finished = 0;
         this.baseline = canvas.height - 40;
+        this.frames = 0;
     }
 
     resetMap() {
         this.ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+
+    nextScene() {
+        return false;
     }
 };
 
@@ -20,7 +25,6 @@ export class titleScene extends Scene {
     constructor(canvas, ctx, data) {
         super(canvas, ctx, data);
         this.maxFrames = 30*3;
-        this.frames = 0;
     }
 
     process() {
@@ -155,7 +159,8 @@ export class placeScene extends Scene {
             color: data.context.color,
             name: data.context['display-name'],
             logo: data.logo,
-            health: 100
+            health: 100,
+            record: data.record
         });
         this.enemy = new Enemy(ctx, {
             x: canvas.width - 90,
@@ -164,10 +169,13 @@ export class placeScene extends Scene {
             height: 80,
             color: getRandomColor(),
             name: data.enemy.name,
-            health: 100
+            health: 100,
+            record: data.enemy
         });
         this.frames = 0;
+        this.next = false;
     }
+
     process() {
         this.frames++;
         if (this.player.x < this.enemy.x - 10 - this.player.width) {
@@ -175,14 +183,38 @@ export class placeScene extends Scene {
             this.enemy.x -= 3;
             return;
         }
-        if (this.player.health && this.enemy.health) {
+        if (this.player.health > 0 && this.enemy.health > 0) {
             if (this.frames % 10 == 0) {
-                
+                this.fight();
             }
             return;
         }
+        if (this.enemy.health <= 0) {
+            this.next = new winScene(this.canvas, this.ctx, this.data);
+        }
+        if (this.player.health <= 0) {
+            this.next = new loseScene(this.canvas, this.ctx, this.data);
+        }
         this.finished = 1;
     }
+
+    fight() {
+        let enemyHit = this.enemy.data.record.stats.attack - this.player.data.record.stats.defense;
+        let playerHit = this.player.data.record.stats.attack - this.enemy.data.record.stats.defense;
+
+        if (enemyHit > 0) {
+            this.player.health -= enemyHit;
+        }
+        if (playerHit > 0) {
+            this.enemy.health -= playerHit;
+        }
+    }
+
+    battle(player, enemy) {
+        // FORMULA = ([userdef] - [enematk]) - ([enemdef] - [useratk])
+        return (player.defense - enemy.attack) - (enemy.defense - player.attack);
+    }
+
     draw() {
         this.resetMap();
         drawBackground(this.ctx, this.data.biome);
@@ -203,6 +235,100 @@ export class placeScene extends Scene {
     }
 
     nextScene() {
-        return false;
+        return this.next;
     }
 };
+
+export class winScene extends Scene {
+    process() {
+        this.frames++;
+        if (this.frames < 100) {
+            return;
+        }
+        this.finished = 1;
+    }
+
+    draw() {
+        this.resetMap();
+        this.drawLogo();
+        this.drawName();
+        this.drawTitle();
+    }
+
+    drawName() {
+        this.ctx.font = '20px serif';
+        this.ctx.fillStyle = this.data.context.color;
+        this.ctx.fillText(
+            this.data.context['display-name'],
+            (this.canvas.width * 0.5) - 10,
+            this.baseline - 10
+        );
+    }
+
+    drawTitle() {
+        this.ctx.font = '20px serif';
+        this.ctx.fillStyle = `rgba(240,245,250,0.5)`;
+        this.ctx.fillText(
+            'You win!',
+            (this.canvas.width * 0.5) - 10,
+            this.baseline + 10
+        );
+    }
+
+    drawLogo() {
+        this.ctx.drawImage(
+            this.data.logo, 
+            (this.canvas.width * 0.5) - 120,
+            this.baseline - 60, //+ 100 + (this.canvas.height - this.baseline),
+            100, 
+            100
+        );
+    }
+}
+
+export class loseScene extends Scene {
+    process() {
+        this.frames++;
+        if (this.frames < 100) {
+            return;
+        }
+        this.finished = 1;
+    }
+
+    draw() {
+        this.resetMap();
+        this.drawLogo();
+        this.drawName();
+        this.drawTitle();
+    }
+
+    drawName() {
+        this.ctx.font = '20px serif';
+        this.ctx.fillStyle = this.data.context.color;
+        this.ctx.fillText(
+            this.data.context['display-name'],
+            (this.canvas.width * 0.5) - 10,
+            this.baseline - 10
+        );
+    }
+
+    drawTitle() {
+        this.ctx.font = '20px serif';
+        this.ctx.fillStyle = `rgba(240,245,250,0.5)`;
+        this.ctx.fillText(
+            'You died!',
+            (this.canvas.width * 0.5) - 10,
+            this.baseline + 10
+        );
+    }
+
+    drawLogo() {
+        this.ctx.drawImage(
+            this.data.logo, 
+            (this.canvas.width * 0.5) - 120,
+            this.baseline - 60, //+ 100 + (this.canvas.height - this.baseline),
+            100, 
+            100
+        );
+    }
+}
