@@ -5,20 +5,10 @@ const {Place} = require('./places.js');
 const {getRandomWord, generateItemBySlot, generateItemRandom} = require('./item.js');
 const {Color} = require('./colors.js');
 const {Enemy} = require('./enemies.js');
-const {getRandomInt} = require('./random.js');
+const {getRandomInt, getRandomItem} = require('./random.js');
 const markov = require('../markov.js');
 const {Trap} = require('./trap.js');
 const {Boon} = require('./boon.js');
-
-/**
- * Adventure Game
- *
- *   Other Ideas:
- *
- *   - Trade stuff with other players
- *   - Discover PETS!? (Maybe it should just be a pets game)
- *   - Collect resources to craft helpful stuff
- */
 
 /**
  * ADVENTURE
@@ -26,14 +16,22 @@ const {Boon} = require('./boon.js');
  */
 
 /* Ideas
- * Shop command to buy weapons / armor from a selection
- * Earn ranks while leveling, unlocking more commands
- * Encourage players to wait a few minutes to prevent spamming the command, fatique or something
- *     Maybe you only have so many adventures and they recharge over time
- * Add a bank command to store the most valuable items (unlocked at level)
- *
- * Translate some of the text to cutscenes
+ * - Enemy level ranges
+ * - Biome level ranges
  */
+
+function getLevels() {
+    var levels = [];
+    var step = 80;
+    levels[0] = 0;
+    levels[1] = 0;
+    levels[2] = step;
+    for (let i = 3; i < 100; i++) {
+        step = step * 1.1;
+        levels[i] = levels[i - 1] + step;
+    }
+    return levels;
+}
 
 exports.haveAnAdventure = async (client, target, text, context, sockets) => {
     let adventure = new Adventure(client, target, text, context, sockets);
@@ -90,24 +88,9 @@ class Adventure
             : this.record;
         console.log(
             this.player,
-            typeof this.player
         );
         this.setupPlayer();
-        //this.begin();
-
-        this.sockets.io.emit('adventure', {
-            username: this.user,
-            context: this.context,
-            record: this.player,
-            boon: (new Boon).random(),
-            trap: (new Trap).random(),
-            enemy: this.getRandomEnemy(),
-            sentence: markov.randomSentence(),
-            place: {
-                type: (new Place).random(),
-                name: getRandomWord()
-            }
-        });
+        this.begin();
     }
 
     setupPlayer() {
@@ -135,13 +118,118 @@ class Adventure
         }
     }
 
+    socketAdventure() {
+        let enemy = this.getRandomEnemy();
+        let battleResults = this.simulateBattle(enemy);
+        let item = this.getItemChance();
+        let decideTakeItem = item ? this.decideTakeItem(item) : false;
+
+        this.sockets.io.emit('adventure', {
+            username: this.user,
+            levels: getLevels(),
+            context: this.context,
+            record: this.player,
+            boon: (new Boon).random(),
+            trap: (new Trap).random(),
+            enemy: enemy,
+            sentence: markov.randomSentence(),
+            place: {
+                type: (new Place).random(),
+                name: getRandomWord()
+            },
+            battle: battleResults,
+            item: item,
+            decideTakeItem: decideTakeItem
+        });
+
+        if (this.player.health <= 0) {
+            this.player = this.records.getFreshPlayer();
+            this.records.savePlayer(this.player);
+            return;
+        }
+    }
+
+    getItemChance() {
+        if (Math.random() > 0.5) {
+            return false;
+        }
+        let slot = getRandomItem(['head', 'weapon', 'potion']);
+        return {slot: slot, item: generateItemBySlot(slot)};
+    }
+
+    decideTakeItem(data) {
+        if (this.compareNewGear(data.slot, data.item)) {
+            this.player.gear[data.slot] = data.item;
+            this.records.savePlayer(this.player);
+            return true;
+        }
+        return false;
+    }
+
+    simulateBattle(enemy) {
+        let rounds = getRandomInt(10, 20);
+        let log = [];
+        let playerTotal = 0;
+        let enemyTotal = 0;
+        for (let i = 0; i < rounds; i++) {
+            let playerAttack = 
+                Math.max(this.player.stats.attack - (enemy.stats.defense / 2) + getRandomInt(-5, 5), 0);
+            let enemyAttack = 
+                Math.max(enemy.stats.attack - (this.player.stats.defense) + getRandomInt(-5, 5), 0);
+
+            log.push({
+                playerAttack: playerAttack,
+                enemyAttack: enemyAttack
+            });
+
+            enemy.health -= playerAttack;
+            this.player.health -= enemyAttack;
+
+            playerTotal += playerAttack;
+            enemyTotal += enemyAttack;
+
+            if (enemy.health < 1 || this.player.health < 1) {
+                break;
+            }
+        }
+        let experience = this.player.health > 0 ? enemy.level * 4 : 0;
+        this.addExperience(experience);
+        this.records.savePlayer(this.player);
+        return {
+            log: log,
+            experience: experience, 
+            playerTotal: playerTotal,
+            enemyTotal: enemyTotal
+        };
+    }
+
+    addExperience(experience) {
+        // Update player experience total and calculate level
+        this.player.experience += experience;
+        let newLevel = this.calculateLevel();
+        if (newLevel === this.player.level) {
+            return;
+        }
+        this.player.health = 100;
+        this.player.level = newLevel;
+    }
+
+    calculateLevel() {
+        let levels = getLevels();
+        // Filter levels on XP, get the last index
+        return levels.filter((experience) => {
+            return experience < this.player.experience;
+        }).length - 1;
+    }
+
     begin() {
         let command = this.isInputACommand()
         console.log(command);
         if (command) {
             return this[command]();
         }
-        this.randomEvent();
+        //this.randomEvent();
+        this.socketAdventure();
     }
 
     randomEvent() {
@@ -198,6 +286,7 @@ class Adventure
         let potion = this.player['gear']['potion'];
         if (potion === null) {
             this.say('You do not have any potions.');
+            return;
         }
         this.player['health'] += potion['stat'];
         this.player['gear']['potion'] = null;
@@ -400,12 +489,10 @@ class Adventure
             weapon: getRandomInt(0,5) === 5 ? null : generateItemBySlot('weapon'),
             potion: getRandomInt(0,5) === 5 ? null : generateItemBySlot('potion'),
         };
-        // attack - strlen(name)
-        // defense - attack * [.25, .5, .75, 1, 1.25, 1.5, 1.75]
-        // FORMULA = ([userdef] - [enematk]) - ([enemdef] - [useratk])
+        let level = getRandomInt(this.player.level, this.player.level + 5);
         // You defeated X with your Y. 
         // (depending on how much damage positive / negative score:) It was a critical hit! Devastating, etc
-        let attack = enemy.length + (this.player['stats']['defense'] * 0.5) + (this.player['stats']['attack'] * 0.5);
+        let attack = level * getRandomInt(1, 3);
         let multipliers = [
             0.25,
             0.5,
@@ -417,12 +504,14 @@ class Adventure
         ];
         let defense = attack * multipliers[getRandomInt(0, multipliers.length - 1)];
         return {
+            health: 100,
+            level: level,
             color: color,
             type: enemy,
             name: getRandomWord(),
             gear: gear,
             stats: {
-                attack: enemy.length + (this.player['stats']['defense'] / 2),
+                attack: attack,
                 defense: defense
             }
         };

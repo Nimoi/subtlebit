@@ -8,10 +8,17 @@ import {getRandomItem} from './random.js';
 
 /*
  * TODOs:
+ *
  *  - More environments:
  *      - Winter
  *      - Spring
  *      - Desert
+ *
+ * - Levels and Experience:
+ *      - Define which levels are unlocked at which experience level
+ *      - Award players experience and levels
+ *      - Level determines range of enemies
+ *      - Higher levels unlock new biomes
  */
 
 var socket = io();

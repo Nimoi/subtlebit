@@ -1,6 +1,7 @@
 import {getRandomColor, getRandomItem} from './random.js';
 import {Player, Enemy} from './units.js';
 import {drawBackground, Trees, Rocks} from './environment.js';
+import {mapRange} from './range.js';
 
 class Scene {
     constructor(canvas, ctx, data) {
@@ -159,7 +160,7 @@ export class placeScene extends Scene {
             color: data.context.color,
             name: data.context['display-name'],
             logo: data.logo,
-            health: 100,
+            health: this.data.record.health,
             record: data.record
         });
         this.enemy = new Enemy(ctx, {
@@ -185,30 +186,26 @@ export class placeScene extends Scene {
             this.enemy.x -= 3;
             return;
         }
-        if (this.player.health > 0 && this.enemy.health > 0) {
+        if (this.data.battle.log.length) {
             if (this.frames % 20 == 0) {
                 this.fight();
             }
             return;
         }
-        if (this.enemy.health <= 0) {
-            this.next = new winScene(this.canvas, this.ctx, this.data);
-        }
         if (this.player.health <= 0) {
             this.next = new loseScene(this.canvas, this.ctx, this.data);
         }
+        this.next = new winScene(this.canvas, this.ctx, this.data);
         this.finished = 1;
     }
 
     fight() {
-        let enemyHit = this.enemy.data.record.stats.attack - this.player.data.record.stats.defense;
-        let playerHit = this.player.data.record.stats.attack - this.enemy.data.record.stats.defense;
-
-        if (enemyHit > 0) {
-            this.player.damage(enemyHit);
+        let turn = this.data.battle.log.shift();
+        if (turn.enemyAttack > 0) {
+            this.player.damage(turn.enemyAttack);
         }
-        if (playerHit > 0) {
-            this.enemy.damage(playerHit);
+        if (turn.playerAttack > 0) {
+            this.enemy.damage(turn.playerAttack);
         }
     }
 
@@ -255,6 +252,11 @@ export class winScene extends Scene {
         this.drawLogo();
         this.drawName();
         this.drawTitle();
+        this.drawExperience();
+
+        if (this.data.decideTakeItem) {
+            this.drawItem();
+        }
     }
 
     drawName() {
@@ -268,12 +270,26 @@ export class winScene extends Scene {
     }
 
     drawTitle() {
+        let title = this.data.enemyTotal < this.data.playerTotal
+            ? `${this.data.enemy.name} ran away!`
+            : 'You ran away!';
         this.ctx.font = '20px serif';
         this.ctx.fillStyle = `rgba(240,245,250,0.5)`;
         this.ctx.fillText(
-            'You win!',
+            title,
             (this.canvas.width * 0.5) - 10,
             this.baseline + 10
+        );
+    }
+
+    drawItem() {
+        let item = `You found a ${this.data.item.item}`;
+        this.ctx.font = '16px serif';
+        this.ctx.fillStyle = `rgba(240,245,250,0.75)`;
+        this.ctx.fillText(
+            item,
+            (this.canvas.width * 0.5) - 10,
+            this.baseline - 50
         );
     }
 
@@ -284,6 +300,42 @@ export class winScene extends Scene {
             this.baseline - 60, //+ 100 + (this.canvas.height - this.baseline),
             100, 
             100
+        );
+    }
+
+    drawExperience() {
+        // Experience Background
+        this.ctx.fillStyle = '#4c6972';
+        this.ctx.fillRect(
+            (this.canvas.width * 0.5) - 10,
+            this.baseline + 20,
+            100,
+            10
+        );
+
+        // 
+        let previousLevelXp = this.data.levels[this.data.record.level],
+            nextLevelXp = this.data.levels[this.data.record.level + 1],
+            currentXpWidth = mapRange(this.data.record.experience, previousLevelXp, nextLevelXp, 0, 100),
+            updatedXp = this.data.record.experience + this.data.battle.experience,
+            updatedXpWidth = mapRange(updatedXp, previousLevelXp, nextLevelXp, 0, 100),
+            currentFrameWidth = mapRange(this.frames, 0, 100, currentXpWidth, updatedXpWidth);
+
+        // Experience foreground
+        this.ctx.fillStyle = '#0390bb';
+        this.ctx.fillRect(
+            (this.canvas.width * 0.5) - 10,
+            this.baseline + 20,
+            currentFrameWidth,
+            10
+        );
+
+        this.ctx.font = '12px serif';
+        this.ctx.fillStyle = `rgba(240,245,250,0.75)`;
+        this.ctx.fillText(
+            `You earned ${this.data.battle.experience} XP`,
+            (this.canvas.width * 0.5) - 10,
+            this.baseline + 30
         );
     }
 }
