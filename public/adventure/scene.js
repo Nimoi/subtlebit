@@ -178,13 +178,15 @@ export class placeScene extends Scene {
 
     process() {
         this.frames++;
+        this.player.process();
+        this.enemy.process();
         if (this.player.x < this.enemy.x - 10 - this.player.width) {
             this.player.x += 3;
             this.enemy.x -= 3;
             return;
         }
         if (this.player.health > 0 && this.enemy.health > 0) {
-            if (this.frames % 10 == 0) {
+            if (this.frames % 20 == 0) {
                 this.fight();
             }
             return;
@@ -203,10 +205,10 @@ export class placeScene extends Scene {
         let playerHit = this.player.data.record.stats.attack - this.enemy.data.record.stats.defense;
 
         if (enemyHit > 0) {
-            this.player.health -= enemyHit;
+            this.player.damage(enemyHit);
         }
         if (playerHit > 0) {
-            this.enemy.health -= playerHit;
+            this.enemy.damage(playerHit);
         }
     }
 
