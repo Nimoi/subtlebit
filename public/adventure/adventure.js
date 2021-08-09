@@ -2,7 +2,9 @@ import {addToDom} from './dom.js';
 import {
     titleScene,
     travelScene,
-    placeScene
+    placeScene,
+    winScene,
+    loseScene
 } from './scene.js';
 import {getRandomItem} from './random.js';
 
@@ -33,7 +35,6 @@ var ctx = canvas.getContext('2d');
 function resizeCanvas() {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
-    render();
 }
 
 function render() {
@@ -53,6 +54,14 @@ var biomes = [
     'fall',
 ];
 
+var scenes = {
+    titleScene: titleScene,
+    travelScene: travelScene,
+    placeScene: placeScene,
+    winScene: winScene,
+    loseScene: loseScene
+};
+
 class Adventure {
     constructor(data, callback) {
         console.log(data);
@@ -68,6 +77,13 @@ class Adventure {
         this.startTime = this.then;
 
         this.scene = new titleScene(canvas, ctx, data);
+
+        window.addEventListener('resize', () => {
+            resizeCanvas();
+            if (this.scene) {
+                this.scene = new scenes[this.scene.constructor.name](canvas, ctx, data)
+            }
+        });
 
         window.requestAnimationFrame(() => {
             this.frame();

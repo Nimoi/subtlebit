@@ -6,9 +6,7 @@
     <link rel="stylesheet" href="/adventure/adventure.css">
 
     <main class="container">
-        <div class="panel">
-            <canvas id="canvas"></canvas>
-        </div>
+        <canvas id="canvas"></canvas>
     </main>
 
     <script src="https://unpkg.com/axios/dist/axios.min.js"></script>

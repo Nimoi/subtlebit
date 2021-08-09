@@ -22,8 +22,16 @@ class Unit {
     }
 
     damage(amount) {
-        this.health -= amount;
-        this.indicators.push(new Indicator(this, amount));
+        if (amount > 0) {
+            this.health -= amount;
+            this.indicators.push(new DamageIndicator(this, amount));
+            return;
+        }
+        this.miss();
+    }
+
+    miss() {
+        this.indicators.push(new MissIndicator(this));
     }
 
     drawHealthBar() {
@@ -116,6 +124,8 @@ class Indicator {
         this.maxFrames = 50;
         this.frames = 0;
         this.finished = 0;
+        this.color = '#aaa';
+        this.font = '14px serif';
     }
 
     process() {
@@ -127,13 +137,34 @@ class Indicator {
     }
 
     draw() {
-        this.ctx.fillStyle = '#ff2211';
-        this.ctx.font = '14px serif';
+        this.ctx.fillStyle = this.color;
+        this.ctx.font = this.font;
         let textWidth = this.ctx.measureText(this.text).width;
         this.ctx.fillText(
             this.text,
             this.parent.x + (this.parent.width - textWidth) / 2,
             this.parent.y - 20 - (this.frames)
         );
+    }
+}
+
+class DamageIndicator extends Indicator {
+    constructor(parent, text) {
+        super(parent, text);
+        this.color = '#ff2211';
+    }
+}
+
+class MissIndicator extends Indicator {
+    constructor(parent) {
+        super(parent, 'miss');
+        this.color = '#ffd500';
+    }
+}
+
+class HealthIndicator extends Indicator {
+    constructor(parent, text) {
+        super(parent, text);
+        this.color = '#3bc43b';
     }
 }

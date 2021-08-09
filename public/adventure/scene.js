@@ -84,11 +84,14 @@ export class titleScene extends Scene {
 export class travelScene extends Scene {
     constructor(canvas, ctx, data) {
         super(canvas, ctx, data);
+        let placeImage = new Image();
+        placeImage.src = `/images/place_city.png`;
         this.place = {
             x: canvas.width - 170,
             y: canvas.height - 80,
-            width: 160, 
-            height: 100,
+            width: 64, 
+            height: 64,
+            image: placeImage
         };
         this.player = new Player(ctx, {
             x: 10,
@@ -126,8 +129,8 @@ export class travelScene extends Scene {
 
     drawPlace() {
         // Draw place
-        this.ctx.fillStyle = "#aaa";
-        this.ctx.fillRect(
+        this.ctx.drawImage(
+            this.place.image, 
             this.place.x,
             this.place.y,
             this.place.width,
@@ -135,12 +138,11 @@ export class travelScene extends Scene {
         );
 
         // Place Text
-        this.ctx.fillStyle = "#333";
+        this.ctx.fillStyle = "#eee";
         this.ctx.fillText(
             `The ${this.data.place.type} of ${this.data.place.name}`,
             this.place.x + 20,
-            this.place.y+this.place.height/2,
-            this.place.width - 40
+            this.place.y - 20
         );
     }
 
@@ -201,12 +203,8 @@ export class placeScene extends Scene {
 
     fight() {
         let turn = this.data.battle.log.shift();
-        if (turn.enemyAttack > 0) {
-            this.player.damage(turn.enemyAttack);
-        }
-        if (turn.playerAttack > 0) {
-            this.enemy.damage(turn.playerAttack);
-        }
+        this.player.damage(turn.enemyAttack);
+        this.enemy.damage(turn.playerAttack);
     }
 
     battle(player, enemy) {
@@ -270,7 +268,7 @@ export class winScene extends Scene {
     }
 
     drawTitle() {
-        let title = this.data.enemyTotal < this.data.playerTotal
+        let title = this.data.battle.enemyTotal < this.data.battle.playerTotal
             ? `${this.data.enemy.name} ran away!`
             : 'You ran away!';
         this.ctx.font = '20px serif';
@@ -283,13 +281,13 @@ export class winScene extends Scene {
     }
 
     drawItem() {
-        let item = `You found a ${this.data.item.item}`;
+        let item = `You found a ${this.data.item.item.name}`;
         this.ctx.font = '16px serif';
         this.ctx.fillStyle = `rgba(240,245,250,0.75)`;
         this.ctx.fillText(
             item,
             (this.canvas.width * 0.5) - 10,
-            this.baseline - 50
+            this.baseline - 40
         );
     }
 

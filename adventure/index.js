@@ -172,6 +172,10 @@ class Adventure
         let playerTotal = 0;
         let enemyTotal = 0;
         for (let i = 0; i < rounds; i++) {
+            if (enemy.health < 1 || this.player.health < 1) {
+                break;
+            }
+
             let playerAttack = 
                 Math.max(this.player.stats.attack - (enemy.stats.defense / 2) + getRandomInt(-5, 5), 0);
             let enemyAttack = 
@@ -187,10 +191,6 @@ class Adventure
 
             playerTotal += playerAttack;
             enemyTotal += enemyAttack;
-
-            if (enemy.health < 1 || this.player.health < 1) {
-                break;
-            }
         }
         let experience = this.player.health > 0 ? enemy.level * 4 : 0;
         this.addExperience(experience);
@@ -305,9 +305,9 @@ class Adventure
         let headNames = ['head', 'hat', 'helmet', 'helm'];
         let potionNames = ['potion', 'elixir', 'flask'];
 
-        let isWeaponSlot = params.indexOf(weaponNames) !== -1 ? 'weapon' : false;
-        let isHeadSlot = params.indexOf(headNames) !== -1 ? 'head' : false;
-        let isPotionSlot = params.indexOf(potionNames) !== -1 ? 'potion' : false;
+        let isWeaponSlot = weaponNames.indexOf(params) !== -1 ? 'weapon' : false;
+        let isHeadSlot = headNames.indexOf(params) !== -1 ? 'head' : false;
+        let isPotionSlot = potionNames.indexOf(params) !== -1 ? 'potion' : false;
         
         let item;
         if (isWeaponSlot) {
@@ -355,7 +355,7 @@ class Adventure
             return this.player.gear[slot] !== null;
         }).length > 0;
         if (! hasGear) {
-            this.say(this.user + ' has no gear. Try having some !adventure');
+            this.say(this.user + ' has no gear. Try having some !rpg');
             return;
         }
 
@@ -374,7 +374,7 @@ class Adventure
 
         let message = this.user + '\'s inventory: ';
         message += itemValues.join(', ');
-        //message .= '. Try !adventure sell <item>';
+        //message .= '. Try !rpg sell <item>';
         this.say(message);
     }
 
@@ -538,11 +538,11 @@ class Adventure
     */
 
     help() {
-        this.say('Go on an adventure here in this chat. Earn some XP. Find some loot. Get dead maybe too? Try !adventure commands');
+        this.say('Go on an adventure here in this chat. Earn some XP. Find some loot. Get dead maybe too? Try !rpg commands');
     }
 
     commands() {
-        this.say('!adventure - go on an adventure, !adventure potion - drink your potion, !adventure inventory - check your gear, !adventure sell - sell your gear, !adventure help - learn more');
+        this.say('!rpg - go on an adventure, !rpg potion - drink your potion, !rpg inventory - check your gear, !rpg sell - sell your gear, !rpg help - learn more');
     }
 
     say(message) {

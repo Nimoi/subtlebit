@@ -1,0 +1,9 @@
+/*
+    'City',
+    'Village',
+    'Swamp',
+    'Mountains',
+    'Mines',
+    'Forest',
+    'Sewers'
+ */
