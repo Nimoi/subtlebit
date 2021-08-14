@@ -1,11 +1,8 @@
-import {addToDom} from './dom.js';
-import {
-    titleScene,
-    travelScene,
-    placeScene,
-    winScene,
-    loseScene
-} from './scene.js';
+import {titleScene} from './scenes/title.js';
+import {travelScene} from './scenes/travel.js';
+import {placeScene} from './scenes/place.js';
+import {winScene} from './scenes/win.js';
+import {loseScene} from './scenes/lose.js';
 import {getRandomItem} from './random.js';
 
 /*
