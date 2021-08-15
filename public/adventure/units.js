@@ -21,16 +21,17 @@ class Unit {
         });
     }
 
-    damage(amount) {
-        if (amount > 0) {
-            this.health -= amount;
-            if (this.health < 0) {
-                this.health = 0;
-            }
-            this.indicators.push(new DamageIndicator(this, amount));
+    damage(hit) {
+        this.health -= hit.damage;
+        if (this.health < 0) {
+            this.health = 0;
+        }
+        console.log('crit:',hit.critical);
+        if (hit.critical) {
+            this.indicators.push(new CriticalIndicator(this, hit.damage));
             return;
         }
-        this.miss();
+        this.indicators.push(new DamageIndicator(this, hit.damage));
     }
 
     heal(amount) {
@@ -167,6 +168,14 @@ class DamageIndicator extends Indicator {
     constructor(parent, text) {
         super(parent, text);
         this.color = '#ff2211';
+    }
+}
+
+class CriticalIndicator extends Indicator {
+    constructor(parent, text) {
+        super(parent, text);
+        this.color = '#ff3c00';
+        this.font = 'bold 16px serif';
     }
 }
 

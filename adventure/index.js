@@ -141,7 +141,6 @@ class Adventure
     }
 
     socketAdventure() {
-        //let enemy = this.getRandomEnemy();
         let enemy = this.getRandomEnemyByLevel();
         let battleResults = this.simulateBattle(enemy);
         let item = this.getItemChance();
@@ -201,7 +200,7 @@ class Adventure
                 break;
             }
 
-            let attack = 0;
+            let hit = {damage: 0};
             let heal = 0;
 
             if (playerTurn) {
@@ -213,8 +212,8 @@ class Adventure
                     this.player.gear.potion = null;
                 } else {
                     // Player attack
-                    attack = this.getHitDamage(this.player, enemy);
-                    enemy.stats.health_now -= attack;
+                    hit = this.getHitDamage(this.player, enemy);
+                    enemy.stats.health_now -= hit.damage;
                     if (enemy.stats.health_now < 0) {
                         enemy.stats.health_now = 0;
                     }
@@ -223,15 +222,15 @@ class Adventure
 
             if (! playerTurn) {
                 // Enemy attack
-                attack = this.getHitDamage(enemy, this.player);
-                this.player.stats.health_now -= attack;
+                hit = this.getHitDamage(enemy, this.player);
+                this.player.stats.health_now -= hit.damage;
                 if (this.player.stats.health_now < 0) {
                     this.player.stats.health_now = 0;
                 }
             }
 
             log.push({
-                attack: attack,
+                hit: hit,
                 heal: heal,
                 playerHealth: this.player.stats.health_now,
                 enemyHealth: this.player.stats.health_now,
@@ -254,12 +253,31 @@ class Adventure
     }
 
     getHitDamage(attacker, target) {
+        let hit = {
+            damage: 0,
+            critical: false
+        };
         let damage = getRandomInt(attacker.stats.power * 0.8, attacker.stats.power * 1.2) * 0.25;
         damage -= target.stats.defense * 0.1;
         if (Math.random() > 1 - attacker.stats.critical_chance) {
             damage *= 2;
+            hit.critical = true;
+            console.log('critical!');
         }
-        return damage >= 0 ? Math.ceil(damage) : 0;
+        damage = this.applyAttackModifiers(attacker, damage);
+        hit.damage = damage >= 0 ? Math.ceil(damage) : 0
+        return hit;
+    }
+
+    applyAttackModifiers(attacker, damage) {
+        if (! ('modifiers' in attacker)) {
+            return damage;
+        }
+        if (attacker.modifiers.includes('fiery')) {
+            // Add 10% fire damage
+            damage += damage * 0.1;
+        }
+        return damage;
     }
 
     getDerivedStats(stats) {
@@ -313,7 +331,6 @@ class Adventure
         if (command) {
             return this[command]();
         }
-        //this.randomEvent();
         this.socketAdventure();
     }
 
@@ -322,6 +339,9 @@ class Adventure
         let enemy = getRandomItem(tier.enemies);
         let level = getRandomInt(tier.min, tier.max);
         let color = (new Color()).random();
+        let modifiers = 'modifiers' in tier
+            ? tier.modifiers
+            : [];
         
         // allocate stat points - 3 per level
         let stats = {
@@ -339,13 +359,13 @@ class Adventure
             ...this.getDerivedStats(stats)
         };
         return {
-            health: 100,
             level: level,
             color: color,
             type: enemy,
             name: getRandomWord(),
             stats: stats,
-            currency: getRandomInt(0, Math.ceil(level*1.2))
+            currency: getRandomInt(0, Math.ceil(level*1.2)),
+            modifiers: modifiers
         };
     }
 
@@ -423,6 +443,19 @@ class Adventure
                     'Ghoul',
                     'Husk'
                 ]
+            },
+            {
+                min: 26,
+                max: 30,
+                enemies: [
+                    'Rat',
+                    'Bat',
+                    'Cow',
+                    'Sheep'
+                ],
+                modifiers: [
+                    'fiery'
+                ]
             }
         ];
     }
@@ -481,66 +514,10 @@ class Adventure
         ];
     }
 
-    randomEvent() {
-        this.say(this.adventureStartMessage());
-        let random = Math.random();
-        if (random < 0.25) {
-            return this.trap();
-        }
-        if (random < 0.5) {
-            return this.boon();
-        }
-        return this.fight();
-    }
-
-    trap() {
-        let trap = (new Trap).random();
-        this.player['health'] -= trap.damage;
-        this.records.savePlayer(this.player);
-        this.say('You '+trap.verb+' '+trap.name+'!');
-        this.say('You lost ☠️'+trap.damage+' HP.');
-    }
-
-    boon() {
-        let boon = (new Boon).random();
-        this.player['health'] += boon.health;
-        this.records.savePlayer(this.player);
-        this.say('You '+boon.verb+' '+boon.name+'!');
-        this.say('You gained ❤️'+boon.health+' HP.');
-    }
-
-    adventureStartMessage() {
-        let adventureStart = ''+this.user+' ';
-        adventureStart += '(❤️'+this.player['health']+') ';
-        let place = (new Place).random();
-        adventureStart += 'travels to the '+place+' of '+getRandomWord() + '. ';
-        return adventureStart;
-    }
-
-    getTimesAdventured() {
-        return this.player['wins'] + this.player['losses'] + 1;
-    }
-
     isInputACommand() {
         return this.commands.find((command) => {
             return this.input.trim().substr(0, command.length) === command
         });
-    }
-
-    drink() {
-        return this.potion();
-    }
-
-    potion() {
-        let potion = this.player['gear']['potion'];
-        if (potion === null) {
-            this.say('You do not have any potions.');
-            return;
-        }
-        this.player['health'] += potion['stat'];
-        this.player['gear']['potion'] = null;
-        this.records.savePlayer(this.player);
-        this.say(this.user+' drank their '+potion['name']+' and gained (❤️'+potion['stat']+') health.');
     }
 
     sell() {
@@ -615,24 +592,20 @@ class Adventure
             item.value = item.stat * 10;
             return this.getItemName(item) + ' $'+item.value;
         });
-        // TODO: fix
-        //})->sortByDesc('slot')->map(function (item) {
-            //item['value'] = item['stat'] * 10;
-            //return this.getItemName(item) . ' $'.item['value'];
-        //});
 
         let message = this.user + '\'s inventory: ';
         message += itemValues.join(', ');
-        //message .= '. Try !rpg sell <item>';
         this.say(message);
     }
 
     stats() {
         let message = this.user + '\'s stats: ';
-        message += '💗'+this.player['health']+', ';
-        message += '⚔️'+this.player['stats']['attack']+', ';
-        message += '🛡️'+this.player['stats']['defense']+', ';
-        message += ''+this.player['experience']+' XP.';
+        message += '💗'+this.player.stats.stamina+', ';
+        message += '💪'+this.player.stats.strength+', ';
+        message += '🏃'+this.player.stats.dexterity+', ';
+        message += '⚔️'+this.player.stats.power+', ';
+        message += '🛡️'+this.player.stats.defense+', ';
+        message += '🔮'+this.player.experience+' XP.';
         this.say(message);
     }
 
@@ -645,125 +618,6 @@ class Adventure
             icon = '💗';
         }
         return item['name'] + ' ('+icon+item['stat']+')';
-    }
-
-    fight() {
-        let enemy = this.getRandomEnemy();
-        let win = this.battle(this.player['stats'], enemy['stats']);
-        //let wordStartsWithVowel = this.wordStartsVowel(enemy['type']);
-        //response = wordStartsWithVowel ? 'An' : 'A';
-        let response = enemy['name']+' the '+enemy['type'];
-        response += ' (⚔️'+enemy['stats']['attack']+', 🛡️'+enemy['stats']['defense']+')';
-        response += ' attacks!';
-        response += ' It shouts at you, "'+markov.randomSentence()+'"!';
-        this.say(response + this.damagePlayer(enemy));
-        let experience = 0;
-        if (this.player['health'] <= 0) {
-            this.say(this.user+' has died!');
-            this.player = this.records.getFreshPlayer();
-            this.records.savePlayer(this.player);
-            return;
-        }
-        response = '';
-        if (win) {
-            this.player['wins']++;
-            experience = enemy['stats']['defense'] * 10;
-            response += ' You defeated it';
-            if (! this.player['gear']['weapon']) {
-                response += ' with your '+this.getItemName(this.player['gear']['weapon']);
-            }
-            response += '!';
-            if (enemy['gear']['head']) {
-                response = this.takeItOrLeaveIt(response, 'head', enemy['gear']['head']);
-            }
-            if (enemy['gear']['weapon']) {
-                response = this.takeItOrLeaveIt(response, 'weapon', enemy['gear']['weapon']);
-            }
-            if (enemy['gear']['potion']) {
-                response = this.takeItOrLeaveIt(response, 'potion', enemy['gear']['potion']);
-            }
-        } else {
-            this.player['losses']++;
-            experience = enemy['stats']['attack'];
-            response += ' It tore you up but you managed to escape.';
-        }
-        this.player['experience'] = (parseFloat(experience) + parseFloat(this.player['experience'])).toFixed(2);
-        this.records.savePlayer(this.player);
-        response += '. You earned '+experience+'XP.';
-        this.say(response);
-    }
-
-    damagePlayer(enemy) {
-        let damage = enemy['stats']['attack'] - this.player['stats']['defense'];
-        if (damage <= 0) {
-            //return ' You takes no damage.';
-            return '';
-        }
-        this.player['health'] -= damage;
-        return ' You lost ☠️'+damage+ ' HP.';
-    }
-
-    wordStartsVowel(word) {
-        let vowels = ['a','e','i','o','u'];
-        let firstLetterOfWord = word.substr(0, 1).toLowerCase();
-        return vowels.indexOf(firstLetterOfWord) !== -1;
-    }
-
-    battle(player, enemy) {
-        // FORMULA = ([userdef] - [enematk]) - ([enemdef] - [useratk])
-        return (player['defense'] - enemy['attack']) - (enemy['defense'] - player['attack']);
-    }
-
-    takeItOrLeaveIt(response, slot, item) {
-        if (response.indexOf('Dropped: ') === -1) {
-            response += ' Dropped: '+this.getItemName(item);
-        } else {
-            response += ' Also dropped: '+this.getItemName(item);
-        }
-        if (this.compareNewGear(slot, item)) {
-            this.player['gear'][slot] = item;
-            this.records.savePlayer(this.player);
-            response += ' You take it.';
-        } else {
-            response += '';
-        }
-        return response;
-    }
-
-    getRandomEnemy() {
-        let color = (new Color()).random();
-        let enemy = (new Enemy()).random();
-        let gear = {
-            head: getRandomInt(0,5) === 5 ? null : generateItemBySlot('head'),
-            weapon: getRandomInt(0,5) === 5 ? null : generateItemBySlot('weapon'),
-            potion: getRandomInt(0,5) === 5 ? null : generateItemBySlot('potion'),
-        };
-        let level = getRandomInt(this.player.level, this.player.level + 5);
-        // You defeated X with your Y. 
-        // (depending on how much damage positive / negative score:) It was a critical hit! Devastating, etc
-        let attack = level * getRandomInt(1, 3);
-        let multipliers = [
-            0.25,
-            0.5,
-            0.75,
-            1.0,
-            1.25,
-            1.5,
-            1.75
-        ];
-        let defense = attack * multipliers[getRandomInt(0, multipliers.length - 1)];
-        return {
-            health: 100,
-            level: level,
-            color: color,
-            type: enemy,
-            name: getRandomWord(),
-            gear: gear,
-            stats: {
-                attack: attack,
-                defense: defense
-            }
-        };
     }
 
     /*

@@ -80,16 +80,16 @@ export class placeScene extends Scene {
             if (round.heal) {
                 this.player.heal(round.heal);
             }
-            if (round.attack) {
-                this.enemy.damage(round.attack);
+            if (round.hit.damage) {
+                this.enemy.damage(round.hit);
             }
         }
         if (round.turn === 'enemy') {
             if (round.heal) {
                 this.enemy.heal(round.heal);
             }
-            if (round.attack) {
-                this.player.damage(round.attack);
+            if (round.hit.damage) {
+                this.player.damage(round.hit);
             }
         }
     }
