@@ -4,7 +4,7 @@
 $path = '/web/subtlebit/adventure/records';
 $results = [];
 foreach(scandir($path) as $file) {
-    if (in_array($file, ['.', '..'], true)) {
+    if (in_array($file, ['.', '..', '.gitignore'], true)) {
         continue;
     }
     $record = file_get_contents($path.'/'.$file);

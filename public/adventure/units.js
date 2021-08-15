@@ -24,6 +24,9 @@ class Unit {
     damage(amount) {
         if (amount > 0) {
             this.health -= amount;
+            if (this.health < 0) {
+                this.health = 0;
+            }
             this.indicators.push(new DamageIndicator(this, amount));
             return;
         }
@@ -49,7 +52,7 @@ class Unit {
         this.ctx.fillRect(
             this.x,
             this.y - 4,
-            mapRange(this.health, 0, 100, 0, this.width),
+            mapRange(this.health, 0, this.data.record.stats.health_max, 0, this.width),
             4
         );
     }

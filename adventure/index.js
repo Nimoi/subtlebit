@@ -113,13 +113,38 @@ class Adventure
         if (! this.player['level']) {
             this.player['level'] = 1;
         }
-        if (! this.player['health']) {
-            this.player['health'] = 100;
+        this.updatePlayerStats();
+        this.player.stats = {
+            ...this.player.stats,
+            ...this.getDerivedStats(this.player.stats)
         }
     }
 
+    updatePlayerStats() {
+        if (! ('strength' in this.player.stats)) {
+            this.addPlayerBaseStats();
+        }
+        // allocate points
+        let allocatedTotal = this.getPlayerTotalAllocated();
+        let toAllocate = (this.player.level * 3) - allocatedTotal;
+        this.player.stats = this.allocateStatPoints(this.player.stats, toAllocate);
+    }
+
+    addPlayerBaseStats() {
+        this.player.stats.strength = 1;
+        this.player.stats.stamina = 1;
+        this.player.stats.dexterity = 1;
+    }
+
+    getPlayerTotalAllocated() {
+        return this.player.stats.strength
+            + this.player.stats.stamina
+            + this.player.stats.dexterity;
+    }
+
     socketAdventure() {
-        let enemy = this.getRandomEnemy();
+        //let enemy = this.getRandomEnemy();
+        let enemy = this.getRandomEnemyByLevel();
         let battleResults = this.simulateBattle(enemy);
         let item = this.getItemChance();
         let decideTakeItem = item ? this.decideTakeItem(item) : false;
@@ -167,30 +192,37 @@ class Adventure
     }
 
     simulateBattle(enemy) {
-        let rounds = getRandomInt(10, 20);
         let log = [];
-        let playerTotal = 0;
-        let enemyTotal = 0;
-        for (let i = 0; i < rounds; i++) {
-            if (enemy.health < 1 || this.player.health < 1) {
-                break;
+        // TODO: if the battle goes too long, like 100 turns, zap the enemy with a lightning bolt or something
+        let i = 0;
+        console.log(this.player, enemy);
+        while (enemy.stats.health_now > 0 && this.player.stats.health_now > 0) {
+            i++;
+            if (i > 100) {
+                return;
+            }
+            // Player attack
+            let playerAttack = this.getHitDamage(this.player, enemy);
+            enemy.stats.health_now -= playerAttack;
+            if (enemy.stats.health_now < 0) {
+                enemy.stats.health_now = 0;
             }
 
-            let playerAttack = 
-                Math.max(this.player.stats.attack - (enemy.stats.defense / 2) + getRandomInt(-5, 5), 0);
-            let enemyAttack = 
-                Math.max(enemy.stats.attack - (this.player.stats.defense) + getRandomInt(-5, 5), 0);
+            // Enemy attack
+            let enemyAttack = this.getHitDamage(enemy, this.player);
+            this.player.stats.health_now -= enemyAttack;
+            if (this.player.stats.health_now < 0) {
+                this.player.stats.health_now = 0;
+            }
+
+            console.log(`round ${i} player: ${this.player.stats.health_now}, ${playerAttack} enemy: ${enemy.stats.health_now}, ${enemyAttack}`);
 
             log.push({
                 playerAttack: playerAttack,
-                enemyAttack: enemyAttack
+                enemyAttack: enemyAttack,
+                playerHealth: this.player.stats.health_now,
+                enemyHealth: this.player.stats.health_now
             });
-
-            enemy.health -= playerAttack;
-            this.player.health -= enemyAttack;
-
-            playerTotal += playerAttack;
-            enemyTotal += enemyAttack;
         }
         let experience = this.player.health > 0 ? enemy.level * 4 : 0;
         this.addExperience(experience);
@@ -198,9 +230,26 @@ class Adventure
         return {
             log: log,
             experience: experience, 
-            playerTotal: playerTotal,
-            enemyTotal: enemyTotal
         };
+    }
+
+    getHitDamage(attacker, target) {
+        let damage = getRandomInt(attacker.stats.power * 0.8, attacker.stats.power * 1.2) * 0.25;
+        damage -= target.stats.defense * 0.1;
+        if (Math.random() > 1 - attacker.stats.critical_chance) {
+            damage *= 2;
+        }
+        return damage >= 0 ? Math.ceil(damage) : 0;
+    }
+
+    getDerivedStats(stats) {
+        return {
+            health_max: 10 + stats.stamina * 2,
+            health_now: 10 + stats.stamina * 2,
+            power: stats.strength * 2,
+            defense: 1,
+            critical_chance: stats.dexterity * 0.1
+        }
     }
 
     addExperience(experience) {
@@ -230,6 +279,101 @@ class Adventure
         }
         //this.randomEvent();
         this.socketAdventure();
+    }
+
+    getRandomEnemyByLevel() {
+        let tier = this.getEnemyTier();
+        let enemy = getRandomItem(tier.enemies);
+        let level = getRandomInt(tier.min, tier.max);
+        let color = (new Color()).random();
+        
+        // allocate stat points - 3 per level
+        let stats = {
+            strength: 1,
+            stamina: 1,
+            dexterity: 1
+        };
+        stats = this.allocateStatPoints(stats, level * 3);
+        stats = {
+            ...stats,
+            ...this.getDerivedStats(stats)
+        };
+        return {
+            health: 100,
+            level: level,
+            color: color,
+            type: enemy,
+            name: getRandomWord(),
+            stats: stats
+        };
+    }
+
+    allocateStatPoints(stats, points) {
+        for (let i = 0; i < points; i++) {
+            switch(getRandomInt(1,3)) {
+                case 1:
+                    stats.strength++;
+                    break;
+                case 2:
+                    stats.stamina++;
+                    break;
+                case 3:
+                    stats.dexterity++;
+            }
+        }
+        return stats;
+    }
+
+    getEnemyTier() {
+        return this.getEnemyTiers().find((tier) => {
+            return this.player.level >= tier.min && this.player.level <= tier.max;
+        });
+    }
+
+    getEnemyTiers() {
+        return [
+            {
+                min: 1,
+                max: 5,
+                enemies: [
+                    'Rat',
+                    'Bat',
+                    'Cow',
+                    'Sheep'
+                ]
+            },
+            {
+                min: 6,
+                max: 10,
+                enemies: [
+                    'Goblin',
+                    'Skeleton',
+                    'Wolf',
+                    'Bandit'
+                ]
+            },
+            {
+                min: 11,
+                max: 15,
+                enemies: [
+                    'Ninja',
+                    'Pirate',
+                    'Mummy',
+                    'Ogre',
+                    'Demon'
+                ]
+            },
+            {
+                min: 16,
+                max: 20,
+                enemies: [
+                    'Wind Golem',
+                    'Water Golem',
+                    'Earth Golem',
+                    'Fire Golem'
+                ]
+            }
+        ];
     }
 
     randomEvent() {

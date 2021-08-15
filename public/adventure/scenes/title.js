@@ -33,6 +33,14 @@ export class titleScene extends Scene {
             (this.canvas.width * 0.5) - 10,
             this.baseline - 10
         );
+
+        this.ctx.font = '16px serif';
+        this.ctx.fillStyle = this.data.context.color;
+        this.ctx.fillText(
+            `Level ${this.data.record.level}`,
+            (this.canvas.width * 0.5) - 10,
+            this.baseline + 6
+        );
     }
 
     drawTitle() {
@@ -41,7 +49,7 @@ export class titleScene extends Scene {
         this.ctx.fillText(
             'goes on an adventure!',
             (this.canvas.width * 0.5) - 10,
-            this.baseline + 10
+            this.baseline + 20
         );
     }
 

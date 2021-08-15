@@ -16,35 +16,20 @@ export class placeScene extends Scene {
             color: data.context.color,
             name: data.context['display-name'],
             logo: data.logo,
-            health: this.data.record.health,
+            health: this.data.record.stats.health_max,
             record: data.record
         });
-        this.enemies = [];
-        for (let i = 0; i < 3; i++) {
-            this.enemies.push(new Enemy(
-                ctx, {
-                    x: canvas.width - 90,
-                    y: canvas.height - 80,
-                    width: 64, 
-                    height: 64,
-                    color: getRandomColor(),
-                    name: data.enemy.name,
-                    health: 100,
-                    record: data.enemy
-                })
-            );
-        }
         this.enemy = new Enemy(
-                ctx, {
-                    x: canvas.width - 90,
-                    y: canvas.height - 80,
-                    width: 64, 
-                    height: 64,
-                    color: getRandomColor(),
-                    name: data.enemy.name,
-                    health: 100,
-                    record: data.enemy
-                });
+            ctx, {
+                x: canvas.width - 90,
+                y: canvas.height - 80,
+                width: 64, 
+                height: 64,
+                color: getRandomColor(),
+                name: data.enemy.name,
+                health: data.enemy.stats.health_max,
+                record: data.enemy
+            });
         let placeImage = new Image();
         placeImage.src = `/images/place_city.png`;
         this.place = {
@@ -67,21 +52,25 @@ export class placeScene extends Scene {
         this.frames++;
         this.player.process();
         this.enemy.process();
+        
+        // Move to battle
         if (this.player.x < this.enemy.x - 10 - this.player.width) {
             this.player.x += 3;
             this.enemy.x -= 3;
             return;
         }
+
+        // Do battle
         if (this.data.battle.log.length) {
             if (this.frames % 20 == 0) {
                 this.fight();
             }
             return;
         }
-        if (this.player.health <= 0) {
-            this.next = new loseScene(this.canvas, this.ctx, this.data);
-        }
-        this.next = new winScene(this.canvas, this.ctx, this.data);
+
+        this.next = this.player.health <= 0
+            ? new loseScene(this.canvas, this.ctx, this.data)
+            : new winScene(this.canvas, this.ctx, this.data);
         this.finished = 1;
     }
 
