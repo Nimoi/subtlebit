@@ -58,7 +58,7 @@ function getSlotType(slot) {
 }
 
 exports.generateItemRandom = () => {
-    return generateItem(
+    return exports.generateItem(
         getRandomItem(
             Object.keys(getGearSlots())
         )
@@ -66,10 +66,10 @@ exports.generateItemRandom = () => {
 }
 
 exports.generateItemBySlot = (slot) => {
-    return generateItem(slot)['item'];
+    return exports.generateItem(slot)['item'];
 }
 
-function generateItem(slot) {
+exports.generateItem = (slot, level = 1) => {
     let name = '';
     let bonusWord = getRandomWord();
     let bonus = getRandomInt(0,10) === 5 ? getStatScore(bonusWord) : 0;
@@ -83,12 +83,16 @@ function generateItem(slot) {
     }
     let randomWord = getRandomWord();
     name += randomWord;
+    let statBonus = Math.ceil((getStatScore(randomWord) + bonus) * 0.2);
+    let itemLevel = getRandomInt(level - 2, level + 2);
+    let stat = statBonus + itemLevel;
     return {
         slot: slot,
         item: {
             name: name,
-            stat: getStatScore(randomWord) + bonus,
-            slot: slot
+            stat: stat,
+            slot: slot,
+            level: itemLevel
         }
     };
 }

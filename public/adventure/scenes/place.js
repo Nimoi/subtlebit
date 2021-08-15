@@ -75,9 +75,23 @@ export class placeScene extends Scene {
     }
 
     fight() {
-        let turn = this.data.battle.log.shift();
-        this.player.damage(turn.enemyAttack);
-        this.enemy.damage(turn.playerAttack);
+        let round = this.data.battle.log.shift();
+        if (round.turn === 'player') {
+            if (round.heal) {
+                this.player.heal(round.heal);
+            }
+            if (round.attack) {
+                this.enemy.damage(round.attack);
+            }
+        }
+        if (round.turn === 'enemy') {
+            if (round.heal) {
+                this.enemy.heal(round.heal);
+            }
+            if (round.attack) {
+                this.player.damage(round.attack);
+            }
+        }
     }
 
     battle(player, enemy) {

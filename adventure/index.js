@@ -2,7 +2,7 @@ const {Records} = require(__dirname+'/records.js');
 //const Mining = require('./mining.js');
 //const WoodCutting = require('./woodcutting.js');
 const {Place} = require('./places.js');
-const {getRandomWord, generateItemBySlot, generateItemRandom} = require('./item.js');
+const {getRandomWord, generateItemBySlot, generateItem} = require('./item.js');
 const {Color} = require('./colors.js');
 const {Enemy} = require('./enemies.js');
 const {getRandomInt, getRandomItem} = require('./random.js');
@@ -149,6 +149,8 @@ class Adventure
         let item = this.getItemChance();
         let decideTakeItem = item ? this.decideTakeItem(item) : false;
 
+        console.log(item);
+
         this.sockets.io.emit('adventure', {
             username: this.user,
             levels: getLevels(),
@@ -179,7 +181,7 @@ class Adventure
             return false;
         }
         let slot = getRandomItem(['head', 'weapon', 'potion']);
-        return {slot: slot, item: generateItemBySlot(slot)};
+        return generateItem(slot, this.player.level);
     }
 
     decideTakeItem(data) {
@@ -193,43 +195,69 @@ class Adventure
 
     simulateBattle(enemy) {
         let log = [];
-        // TODO: if the battle goes too long, like 100 turns, zap the enemy with a lightning bolt or something
-        let i = 0;
-        console.log(this.player, enemy);
+        let playerTurn = true;
         while (enemy.stats.health_now > 0 && this.player.stats.health_now > 0) {
-            i++;
-            if (i > 100) {
-                return;
-            }
-            // Player attack
-            let playerAttack = this.getHitDamage(this.player, enemy);
-            enemy.stats.health_now -= playerAttack;
-            if (enemy.stats.health_now < 0) {
-                enemy.stats.health_now = 0;
+            if (log.length > 100) {
+                break;
             }
 
-            // Enemy attack
-            let enemyAttack = this.getHitDamage(enemy, this.player);
-            this.player.stats.health_now -= enemyAttack;
-            if (this.player.stats.health_now < 0) {
-                this.player.stats.health_now = 0;
+            let attack = 0;
+            let heal = 0;
+
+            if (playerTurn) {
+                // Player potion
+                let playerHasLowHealth = this.player.stats.health_now / this.player.stats.health_max < 0.4;
+                if (playerHasLowHealth && this.player.gear.potion) {
+                    heal = this.player.gear.potion.stat;
+                    this.player.health_now += heal;
+                    this.player.gear.potion = null;
+                } else {
+                    // Player attack
+                    attack = this.getHitDamage(this.player, enemy);
+                    enemy.stats.health_now -= attack;
+                    if (enemy.stats.health_now < 0) {
+                        enemy.stats.health_now = 0;
+                    }
+                }
             }
 
-            console.log(`round ${i} player: ${this.player.stats.health_now}, ${playerAttack} enemy: ${enemy.stats.health_now}, ${enemyAttack}`);
+            if (! playerTurn) {
+                // Enemy attack
+                attack = this.getHitDamage(enemy, this.player);
+                this.player.stats.health_now -= attack;
+                if (this.player.stats.health_now < 0) {
+                    this.player.stats.health_now = 0;
+                }
+            }
+
+            console.log(`
+                round ${log.length}, 
+                turn: ${playerTurn ? 'player' : 'enemy'}, 
+                player: ${this.player.stats.health_now}, 
+                enemy: ${enemy.stats.health_now}, 
+                attack: ${attack}
+            `);
 
             log.push({
-                playerAttack: playerAttack,
-                enemyAttack: enemyAttack,
+                attack: attack,
+                heal: heal,
                 playerHealth: this.player.stats.health_now,
-                enemyHealth: this.player.stats.health_now
+                enemyHealth: this.player.stats.health_now,
+                turn: playerTurn ? 'player' : 'enemy'
             });
+
+            playerTurn = ! playerTurn;
         }
-        let experience = this.player.health > 0 ? enemy.level * 4 : 0;
+        let experience = this.player.stats.health_now > 0 ? enemy.level * 4 : 0;
         this.addExperience(experience);
+        let currency = this.player.stats.health_now > 0 ? enemy.currency : 0;
+        this.player.currency += currency;
         this.records.savePlayer(this.player);
+        console.log(experience, currency);
         return {
             log: log,
-            experience: experience, 
+            experience: experience,
+            currency: currency
         };
     }
 
@@ -243,11 +271,27 @@ class Adventure
     }
 
     getDerivedStats(stats) {
+        let gearDefense = 0;
+        let gearPower = 0;
+        for (let slot in this.player.gear) {
+            let item = this.player.gear[slot];
+            if (! item) {
+                continue;
+            }
+            switch (slot) {
+                case 'head':
+                    gearDefense += item.stat;
+                    break;
+                case 'weapon':
+                    gearPower += item.stat;
+                    break;
+            }
+        }
         return {
             health_max: 10 + stats.stamina * 2,
             health_now: 10 + stats.stamina * 2,
-            power: stats.strength * 2,
-            defense: 1,
+            power: (stats.strength * 2) + gearPower,
+            defense: 1 + gearDefense,
             critical_chance: stats.dexterity * 0.1
         }
     }
@@ -293,7 +337,7 @@ class Adventure
             stamina: 1,
             dexterity: 1
         };
-        stats = this.allocateStatPoints(stats, level * 3);
+        stats = this.allocateStatPoints(stats, level * 2);
         stats = {
             ...stats,
             ...this.getDerivedStats(stats)
@@ -304,7 +348,8 @@ class Adventure
             color: color,
             type: enemy,
             name: getRandomWord(),
-            stats: stats
+            stats: stats,
+            currency: getRandomInt(0, Math.ceil(level*1.2))
         };
     }
 

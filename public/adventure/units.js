@@ -33,6 +33,18 @@ class Unit {
         this.miss();
     }
 
+    heal(amount) {
+        if (amount > 0) {
+            this.health += amount;
+            if (this.health > this.data.record.stats.health_max) {
+                this.health = this.data.record.stats.health_max;
+            }
+            this.indicators.push(new HealthIndicator(this, amount));
+            return;
+        }
+        this.miss();
+    }
+
     miss() {
         this.indicators.push(new MissIndicator(this));
     }
