@@ -45,6 +45,7 @@ export class placeScene extends Scene {
             biome: this.data.biome,
         });
         this.frames = 0;
+        this.lastFrame = 0;
         this.next = false;
     }
 
@@ -68,10 +69,19 @@ export class placeScene extends Scene {
             return;
         }
 
-        this.next = this.player.health <= 0
-            ? new loseScene(this.canvas, this.ctx, this.data)
-            : new winScene(this.canvas, this.ctx, this.data);
-        this.finished = 1;
+        // Set the next scene
+        if (! this.next) {
+            this.next = this.player.health <= 0
+                ? new loseScene(this.canvas, this.ctx, this.data)
+                : new winScene(this.canvas, this.ctx, this.data);
+
+            this.lastFrame = this.frames + 40;
+        }
+
+        // Delay before next scene
+        if (this.frames >= this.lastFrame) {
+            this.finished = 1;
+        }
     }
 
     fight() {
