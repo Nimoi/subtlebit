@@ -148,6 +148,7 @@ class Adventure
         let battleResults = this.simulateBattle(enemy);
         let item = this.getItemChance();
         let decideTakeItem = item ? this.decideTakeItem(item) : false;
+        let biome = this.getBiomeByLevel();
 
         console.log(item);
 
@@ -166,7 +167,8 @@ class Adventure
             },
             battle: battleResults,
             item: item,
-            decideTakeItem: decideTakeItem
+            decideTakeItem: decideTakeItem,
+            biome: biome
         });
 
         if (this.player.health <= 0) {
@@ -416,6 +418,47 @@ class Adventure
                     'Water Golem',
                     'Earth Golem',
                     'Fire Golem'
+                ]
+            }
+        ];
+    }
+
+    getBiomeByLevel() {
+        let biome = this.getBiomeTiers().find((tier) => {
+            return this.player.level >= tier.min && this.player.level <= tier.max;
+        });
+        console.log(biome);
+        return getRandomItem(biome.biomes);
+    }
+
+    getBiomeTiers() {
+        return [
+            {
+                min: 1,
+                max: 5,
+                biomes: [
+                    'summer',
+                ]
+            },
+            {
+                min: 6,
+                max: 10,
+                biomes: [
+                    'fall',
+                ]
+            },
+            {
+                min: 11,
+                max: 15,
+                biomes: [
+                    'winter',
+                ]
+            },
+            {
+                min: 16,
+                max: 20,
+                biomes: [
+                    'spring',
                 ]
             }
         ];

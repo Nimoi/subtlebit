@@ -3,7 +3,9 @@ import {getRandomInt, getRandomItem} from './random.js';
 export function drawBackground(ctx, biome = 'summer') {
     let colors = {
         summer: '#567d46',
-        fall: '#98964D'
+        fall: '#98964D',
+        winter: '#4d7d98',
+        spring: '#60984d'
     }
     ctx.fillStyle = colors[biome];
     ctx.fillRect(0, canvas.height - 40, canvas.width, canvas.height-10);
@@ -76,6 +78,20 @@ export class Trees extends Scatter {
                 '#DF3908',
                 '#C91E0A'
             ],
+            winter: [
+                '#BFEFFF',
+                '#A0E6FF',
+                '#18656b',
+                '#2c4c44',
+                '#bcc4bc'
+            ],
+            spring: [
+                '#559E2C',
+                '#95B734',
+                '#FFFB84',
+                '#FFFB84',
+                '#FF71BE'
+            ]
         };
         this.populate();
     }
@@ -115,6 +131,16 @@ export class Rocks extends Scatter {
                 '#807669',
                 '#697f80'
             ],
+            winter: [
+                '#e3e5e2',
+                '#b36c5e',
+                '#c9968c'
+            ],
+            spring: [
+                '#586d5b',
+                '#a9806f',
+                '#ccbec9'
+            ]
         };
         this.populate();
     }

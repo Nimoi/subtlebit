@@ -46,11 +46,6 @@ function render() {
 
 resizeCanvas();
 
-var biomes = [
-    'summer',
-    'fall',
-];
-
 var scenes = {
     titleScene: titleScene,
     travelScene: travelScene,
@@ -62,7 +57,6 @@ var scenes = {
 class Adventure {
     constructor(data, callback) {
         console.log(data);
-        data.biome = getRandomItem(biomes);
         data.logo = new Image();
         data.logo.src = `/cache/${data.username}.jpg`;
         this.data = data;
