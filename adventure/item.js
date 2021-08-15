@@ -85,6 +85,9 @@ exports.generateItem = (slot, level = 1) => {
     name += randomWord;
     let statBonus = Math.ceil((getStatScore(randomWord) + bonus) * 0.2);
     let itemLevel = getRandomInt(level - 2, level + 2);
+    if (itemLevel < 1) {
+        itemLevel = 1;
+    }
     let stat = statBonus + itemLevel;
     return {
         slot: slot,

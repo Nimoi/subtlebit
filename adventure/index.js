@@ -86,9 +86,6 @@ class Adventure
         this.player = typeof this.record === 'string'
             ? JSON.parse(this.record)
             : this.record;
-        console.log(
-            this.player,
-        );
         this.setupPlayer();
         this.begin();
     }
@@ -126,7 +123,8 @@ class Adventure
         }
         // allocate points
         let allocatedTotal = this.getPlayerTotalAllocated();
-        let toAllocate = (this.player.level * 3) - allocatedTotal;
+        let toAllocate = (this.player.level * 3) - allocatedTotal + 3;
+        console.log('allocated', allocatedTotal, toAllocate);
         this.player.stats = this.allocateStatPoints(this.player.stats, toAllocate);
     }
 
@@ -232,14 +230,6 @@ class Adventure
                 }
             }
 
-            console.log(`
-                round ${log.length}, 
-                turn: ${playerTurn ? 'player' : 'enemy'}, 
-                player: ${this.player.stats.health_now}, 
-                enemy: ${enemy.stats.health_now}, 
-                attack: ${attack}
-            `);
-
             log.push({
                 attack: attack,
                 heal: heal,
@@ -339,7 +329,11 @@ class Adventure
             stamina: 1,
             dexterity: 1
         };
-        stats = this.allocateStatPoints(stats, level * 2);
+        let statMultiplier = Math.ceil(level / 3);
+        if (statMultiplier > 3) {
+            statMultiplier = 3;
+        }
+        stats = this.allocateStatPoints(stats, level * statMultiplier);
         stats = {
             ...stats,
             ...this.getDerivedStats(stats)
@@ -419,6 +413,16 @@ class Adventure
                     'Earth Golem',
                     'Fire Golem'
                 ]
+            },
+            {
+                min: 21,
+                max: 25,
+                enemies: [
+                    'Wraith',
+                    'Wight',
+                    'Ghoul',
+                    'Husk'
+                ]
             }
         ];
     }
@@ -427,7 +431,6 @@ class Adventure
         let biome = this.getBiomeTiers().find((tier) => {
             return this.player.level >= tier.min && this.player.level <= tier.max;
         });
-        console.log(biome);
         return getRandomItem(biome.biomes);
     }
 
@@ -437,6 +440,7 @@ class Adventure
                 min: 1,
                 max: 5,
                 biomes: [
+                    'spring',
                     'summer',
                 ]
             },
@@ -444,6 +448,7 @@ class Adventure
                 min: 6,
                 max: 10,
                 biomes: [
+                    'summer',
                     'fall',
                 ]
             },
@@ -451,6 +456,7 @@ class Adventure
                 min: 11,
                 max: 15,
                 biomes: [
+                    'fall',
                     'winter',
                 ]
             },
@@ -458,7 +464,18 @@ class Adventure
                 min: 16,
                 max: 20,
                 biomes: [
+                    'winter',
                     'spring',
+                ]
+            },
+            {
+                min: 21,
+                max: 25,
+                biomes: [
+                    'spring',
+                    'summer',
+                    'fall',
+                    'winter',
                 ]
             }
         ];
@@ -785,7 +802,6 @@ class Adventure
         setInterval(() => {
             if (this.messages.length) {
                 this.client.say(this.target, '/me '+this.messages.shift());
-                //console.log(this.messages.shift(), Date.now());
             }
         }, 1500);
     }
