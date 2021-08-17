@@ -33,7 +33,7 @@ export class winScene extends Scene {
     }
 
     drawTitle() {
-        let title = `You defeated ${this.data.enemy.name}!`;
+        let title = `You defeated ${this.data.enemy.name} the ${this.data.enemy.type}!`;
         this.ctx.font = '20px serif';
         this.ctx.fillStyle = `rgba(240,245,250,0.5)`;
         this.ctx.fillText(

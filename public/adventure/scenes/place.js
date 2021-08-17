@@ -19,6 +19,11 @@ export class placeScene extends Scene {
             health: this.data.record.stats.health_max,
             record: data.record
         });
+
+        let enemyImage = new Image();
+        let path = `/images/${data.enemy.type.toLowerCase().replace(' ', '_')}.png`;
+        enemyImage.src = path;
+        console.log(path);
         this.enemy = new Enemy(
             ctx, {
                 x: canvas.width - 90,
@@ -28,7 +33,8 @@ export class placeScene extends Scene {
                 color: getRandomColor(),
                 name: data.enemy.name,
                 health: data.enemy.stats.health_max,
-                record: data.enemy
+                record: data.enemy,
+                image: enemyImage
             });
         let placeImage = new Image();
         placeImage.src = `/images/place_city.png`;
@@ -56,8 +62,8 @@ export class placeScene extends Scene {
         
         // Move to battle
         if (this.player.x < this.enemy.x - 10 - this.player.width) {
-            this.player.x += 3;
-            this.enemy.x -= 3;
+            this.player.x += 4;
+            this.enemy.x -= 4;
             return;
         }
 
@@ -122,6 +128,7 @@ export class placeScene extends Scene {
         if (this.frames > 30 && this.frames < 30 * 6) {
             this.ctx.font = '14px serif';
 
+            this.ctx.fillStyle = '#efefef';
             let textWidth = this.ctx.measureText(this.data.sentence).width;
             this.ctx.fillText(
                 this.data.sentence,

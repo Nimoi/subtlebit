@@ -110,12 +110,23 @@ export class Player extends Unit {
             indicator.draw();
         });
     }
+
+    drawName() {
+        this.ctx.fillStyle = this.data.color;
+        this.ctx.font = '14px serif';
+        let textWidth = this.ctx.measureText(this.data.name).width;
+        this.ctx.fillText(
+            this.data.name,
+            this.x + (this.width - textWidth) / 2,
+            this.y-10
+        );
+    }
 }
 
 export class Enemy extends Unit {
     draw() {
-        this.ctx.fillStyle = this.data.color;
-        this.ctx.fillRect(
+        this.ctx.drawImage(
+            this.data.image,
             this.x,
             this.y,
             this.width,
@@ -129,6 +140,25 @@ export class Enemy extends Unit {
         this.indicators.forEach((indicator) => {
             indicator.draw();
         });
+    }
+
+    drawName() {
+        this.ctx.fillStyle = this.data.color;
+        this.ctx.font = '14px serif';
+        let title = `${this.data.name} the ${this.data.record.type}`;
+        let textWidth = this.ctx.measureText(title).width;
+        this.ctx.fillText(
+            title,
+            this.x,
+            this.y-10
+        );
+
+        this.ctx.fillStyle = '#efefef';
+        this.ctx.fillText(
+            `Level ${this.data.record.level}`,
+            this.x,
+            this.y+12
+        );
     }
 }
 

@@ -398,7 +398,7 @@ class Adventure
                 max: 5,
                 enemies: [
                     'Rat',
-                    'Bat',
+                    'Spider',
                     'Cow',
                     'Sheep'
                 ]
@@ -449,7 +449,7 @@ class Adventure
                 max: 30,
                 enemies: [
                     'Rat',
-                    'Bat',
+                    'Spider',
                     'Cow',
                     'Sheep'
                 ],
@@ -507,6 +507,14 @@ class Adventure
                 biomes: [
                     'spring',
                     'summer',
+                    'fall',
+                    'winter',
+                ]
+            },
+            {
+                min: 26,
+                max: 30,
+                biomes: [
                     'fall',
                     'winter',
                 ]
